@@ -1,0 +1,23 @@
+[project_search_path]: ./
+[map_search_path]: ./
+[project_file_path]: .//Project.uvprojx
+[ map_file_path]: .//Listings/ac6demo.map
+[parse_keil_map start]: 
+[Found keyword]: ----------Execution Region----------
+[name]:  ER_IROM1 
+[Exec base]: 0x8000000
+[Size]: 0xbd74
+[Max]: 0x10000
+[Found keyword]: ----------Execution Region----------
+[name]:  RW_IRAM1 
+[Exec base]: 0x20000000
+[Size]: 0x4f28
+[Max]: 0x5000
+[parse_keil_map over printf bar]: 
+  RW_IRAM1 :0x20000000
+   20.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö_|   98.95 % (   19.79 KB /    20.00 KB) [216 B]
+  ER_IROM1 :0x8000000
+   64.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö______|   74.01 % (   47.36 KB /    64.00 KB) [17036 B]
+[export csv]: ./ac6demo_sort_by_flash.csv
+[export csv]: ./ac6demo_sort_by_ram.csv
+[export xlsx]: ac6demo_analysis.xlsx
