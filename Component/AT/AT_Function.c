@@ -3,12 +3,12 @@
 static uint8_t at_msg_buf[AT_MSG_SIZE];
 AT_STATUS_t at_status[AT_STATUS_NUM] =
 {
-    [0] = {.status = AT_HW_INIT, .callback = AT_HW_INIT_CallBack},
-    [1] = {.status = AT_REGISTER, .callback = AT_REGISTER_CallBack},
-    [2] = {.status = AT_INIT, .callback = AT_INIT_CallBack},
-    [3] = {.status = AT_IDLE, .callback = AT_IDLE_CallBack},
-    [4] = {.status = AT_UPDATA, .callback = AT_UPDATA_CallBack},
-    [5] = {.status = AT_GET_NTP, .callback = AT_GET_NTP_CallBack}
+    [0] = {.status = AT_HW_INIT, .callback = AT_HW_INIT_CallBack},                  // AT硬件初始化
+    [1] = {.status = AT_REGISTER, .callback = AT_REGISTER_CallBack},                // AT设备注册
+    [2] = {.status = AT_INIT, .callback = AT_INIT_CallBack},                        // AT指令初始化
+    [3] = {.status = AT_IDLE, .callback = AT_IDLE_CallBack},                        // AT空闲状态 解析平台下发的指令
+    [4] = {.status = AT_UPDATA, .callback = AT_UPDATA_CallBack},                    // AT更新状态 上报状态至平台
+    [5] = {.status = AT_GET_NTP, .callback = AT_GET_NTP_CallBack}                   // AT获取NTP时间
 };
 
 AT_Device_t AT_Device = {
@@ -30,34 +30,34 @@ char object_j_2_value[LOT_STRING_SIZE];
 uint8_t object_j_3_value[LOT_ARRAY_SIZE];
 
 property_msg_t lot_msg_son[5] = {
-    [0] = {.key = "j_1", .type = bool_type, .value.property_value = &object_j_1_value},
-    [1] = {.key = "j_2", .type = string_type, .value.property_value = object_j_2_value},
-    [2] = {.key = "j_3", .type = array_type, .value.property_value = object_j_3_value},
+//    [0] = {.key = "j_1", .type = bool_type, .value.property_value = &object_j_1_value},
+//    [1] = {.key = "j_2", .type = string_type, .value.property_value = object_j_2_value},
+//    [2] = {.key = "j_3", .type = array_type, .value.property_value = object_j_3_value},
 };
 
 property_msg_t lot_msg[LOT_MSG_SIZE] =
 {
-    [0] = {
-        .key = "j_1",
-        .type = bool_type,
-        .value.property_value = &j_1_value,
-    },
-    [1] = {
-        .key = "j_2",
-        .type = string_type,
-        .value.property_value = j_2_value,
-    },
-    [2] = {
-        .key = "j_3",
-        .type = array_type,
-        .value.property_value = j_3_value,
-    },
-    [3] = {
-        .key = "object",
-        .type = object_type,
-        .value.child = (struct property_msg_t *)lot_msg_son,
-        .child_num = 3,
-    }
+//    [0] = {
+//        .key = "j_1",
+//        .type = bool_type,
+//        .value.property_value = &j_1_value,
+//    },
+//    [1] = {
+//        .key = "j_2",
+//        .type = string_type,
+//        .value.property_value = j_2_value,
+//    },
+//    [2] = {
+//        .key = "j_3",
+//        .type = array_type,
+//        .value.property_value = j_3_value,
+//    },
+//    [3] = {
+//        .key = "object",
+//        .type = object_type,
+//        .value.child = (struct property_msg_t *)lot_msg_son,
+//        .child_num = 3,
+//    }
 };
 /********************/
 
@@ -323,20 +323,19 @@ static uint8_t at_parase_callback(void *device, void *buf)
 /*发生mqtt断链的回调指令的回调函数*/
 static uint8_t MQTTDISCONNECTED_CallBack(void *device, void *data)
 {
-    AT_Device_t *at_device = device;
-    at_device->init_step = 0;
-    at_device->status = AT_INIT;
+	AT_Device_t *at_device = device;
+	at_device->init_step = 0;
+	at_device->status = AT_INIT;
+	
+	return 0;
 }
 
 /*指令集*/
 AT_CMD_t AT_Cmd_table[AT_COMMAND_ARRAY_SIZE] = {
     {"AT\r\n", "OK", 1000, NULL},
-
     {"AT+CWMODE=1\r\n", "OK", 1000, NULL},
-    //    {"AT+RST\r\n", "OK", 5000, NULL},
     {"AT+CWDHCP=1,1\r\n", "OK", 1000, NULL},
     {"AT+MQTTCLEAN=0\r\n", "ERROR", 1000, NULL}, // 返回error说明当前无mqtt链接 可以进行新的连接
-
 };
 
 AT_URC_t AT_URC_table[AT_COMMAND_ARRAY_SIZE] = {
@@ -559,12 +558,12 @@ void AT_UPDATA_CallBack(void *device)
     AT_Device_t *at_device = device;
 
     // Update task logic can be implemented here
-    //    lot_msg_t msg;
-    //    lot_create_root(&msg);
-    //    lot_Add_Number(&msg, "test_time", Unix_Time);
-    //    lot_generate_str(&msg);
-    //    mqtt_pub(at_device, POST_TOPIC, msg.str, msg.len);
-    //    lot_clean(&msg);
+//        lot_msg_t msg;
+//        lot_create_root(&msg);
+//        lot_Add_Number(&msg, "test_time", Unix_Time);
+//        lot_generate_str(&msg);
+//        mqtt_pub(at_device, POST_TOPIC, msg.str, msg.len);
+//        lot_clean(&msg);
 
     at_device->status = AT_IDLE;
 }

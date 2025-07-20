@@ -11,8 +11,8 @@ void AT_Thread_Entry(void *parameter)
 {
     while (1)
     {
-        AT_poll(&AT_Device);
-        rt_thread_mdelay(10);
+      AT_poll(&AT_Device);
+      rt_thread_mdelay(1000);
     }
 }
 
@@ -57,7 +57,7 @@ void AT_Thread_Init(void)
 	rt_timer_init(&timer2, "timer2",  
 							timeout2, 
 							RT_NULL,
-							3 * 1000, 
+							120 * 1000, 
 							RT_TIMER_FLAG_PERIODIC);
 	rt_timer_start(&timer2);
 }

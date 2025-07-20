@@ -1,7 +1,7 @@
 /*
  * This file is part of the Serial Flash Universal Driver Library.
  *
- * Copyright (c) 2016-2018, Armink, <armink.ztl@gmail.com>
+ * Copyright (c) 2016, Armink, <armink.ztl@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -36,14 +36,12 @@
 #define SFUD_USING_FLASH_INFO_TABLE
 
 enum {
-    SFUD_W25Q64_DEVICE_INDEX = 0,
+    SFUD_SST25_DEVICE_INDEX = 0,
 };
 
 #define SFUD_FLASH_DEVICE_TABLE                                                \
 {                                                                              \
-    [SFUD_W25Q64_DEVICE_INDEX] = {.name = "W25Q64", .spi.name = "SPI2"},           \
+    [SFUD_SST25_DEVICE_INDEX] = {.name = "W25Q64", .spi.name = "SPI1"},       \
 }
-
-#define SFUD_USING_QSPI
 
 #endif /* _SFUD_CFG_H_ */

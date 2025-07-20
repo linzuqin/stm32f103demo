@@ -955,6 +955,7 @@
                 "d:\\project\\myproject\\demo\\Component\\Optimize",
                 "d:\\project\\myproject\\demo\\Component\\easyflash",
                 "d:\\project\\myproject\\demo\\Component\\easyflash\\inc",
+                "d:\\project\\myproject\\demo\\Component\\sfud\\inc",
                 "D:\\KEIL\\CORE\\ARM\\ARMCLANG\\include",
                 "D:\\KEIL\\CORE\\ARM\\ARMCLANG\\include\\arm_linux",
                 "D:\\KEIL\\CORE\\ARM\\ARMCLANG\\include\\arm_linux_compat",
@@ -962,7 +963,9 @@
                 "d:\\project\\myproject\\demo\\Component\\modbus\\master\\src",
                 "d:\\project\\myproject\\demo\\Component\\PID\\src",
                 "d:\\project\\myproject\\demo\\Component\\easyflash\\port",
-                "d:\\project\\myproject\\demo\\Component\\easyflash\\src"
+                "d:\\project\\myproject\\demo\\Component\\easyflash\\src",
+                "d:\\project\\myproject\\demo\\Component\\sfud\\src",
+                "d:\\project\\myproject\\demo\\Component\\sfud\\port"
             ],
             "defines": [
                 "USE_STDPERIPH_DRIVER",

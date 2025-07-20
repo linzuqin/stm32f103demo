@@ -17,14 +17,12 @@
 #include "slave_mb_app.h"
 #include "AT_Function.h"
 #include "MPU6050.h"
-#include "ds18b20.h"
 #include "cJSON.h"
-#include "string_Optimize.h"
 #include "base64.h"
 #include "hmac_sha1.h"
 #include "onenet.h"
 #include "lot_function.h"
-#include "user_flash.h"
+#include "W25Q64.h"
 
 #include "string.h"
 #include "stdio.h"
@@ -59,6 +57,10 @@
 
 #define USE_PID										 0
 
+
+/*是否使用片外flash*/
+#define OFF_CHIP						1
+#define OFF_CHIP_SPI				SPI1
 typedef struct 
 {
     /* data */

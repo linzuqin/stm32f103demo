@@ -93,7 +93,7 @@ uint8_t OLED_Index_DisplayBuf[8][128];
 void OLED_W_SCL(uint8_t BitValue)
 {
 	/*根据BitValue的值，将SCL置高电平或者低电平*/
-	GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)BitValue);
+	GPIO_WriteBit(GPIOB, GPIO_Pin_6, (BitAction)BitValue);
 	
 	/*如果单片机速度过快，可在此添加适量延时，以避免超出I2C通信的最大速度*/
 	//...
@@ -110,7 +110,7 @@ void OLED_W_SCL(uint8_t BitValue)
 void OLED_W_SDA(uint8_t BitValue)
 {
 	/*根据BitValue的值，将SDA置高电平或者低电平*/
-	GPIO_WriteBit(GPIOC, GPIO_Pin_14, (BitAction)BitValue);
+	GPIO_WriteBit(GPIOB, GPIO_Pin_7, (BitAction)BitValue);
 	
 	/*如果单片机速度过快，可在此添加适量延时，以避免超出I2C通信的最大速度*/
 	//...
@@ -126,15 +126,15 @@ void OLED_W_SDA(uint8_t BitValue)
 void OLED_GPIO_Init(void)
 {
 	/*将SCL和SDA引脚初始化为开漏模式*/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	
 	GPIO_InitTypeDef GPIO_InitStructure;
  	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14;
- 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
- 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+ 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+ 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	
 	/*释放SCL和SDA*/
 	OLED_W_SCL(1);
@@ -460,7 +460,6 @@ void OLED_Clear(void)
 			OLED_DisplayBuf[j][i] = 0x00;	//将显存数组数据全部清零
 		}
 	}
-    OLED_Update();
 }
 
 /**
@@ -581,8 +580,6 @@ void OLED_ShowString(uint8_t X, uint8_t Y, char *String, uint8_t FontSize)
 		/*调用OLED_ShowChar函数，依次显示每个字符*/
 		OLED_ShowChar(X + i * FontSize, Y, String[i], FontSize);
 	}
-    OLED_Update();
-
 }
 
 /**
@@ -1472,27 +1469,52 @@ static char Display_buf[64];
 
 void OLED_UPDATA(void)
 {
-//	OLED_Clear();
+	uint8_t MID;
+	uint16_t DID;
+	OLED_Clear();
 
-//	rt_memset(Display_buf , 0 , sizeof(Display_buf));
-//	sprintf(Display_buf , "%04d-%02d-%02d %02d:%02d:%02d" , MyRTC_Time[0] , MyRTC_Time[1] , MyRTC_Time[2], MyRTC_Time[3] , MyRTC_Time[4] , MyRTC_Time[5]);
-//	OLED_ShowString(0 , 0 , Display_buf , OLED_6X8);
+	rt_memset(Display_buf , 0 , sizeof(Display_buf));
+	sprintf(Display_buf , "AT Status:");
+	OLED_ShowString(0 , 0 , Display_buf , OLED_8X16);
 //	
+	rt_memset(Display_buf , 0 , sizeof(Display_buf));
+	switch(AT_Device.status)
+	{
+		case AT_HW_INIT:
+			sprintf(Display_buf , "AT_HW_INIT...");
+		break;
+
+		case AT_REGISTER:
+			sprintf(Display_buf , "AT_REGISTER..");
+		break;
+
+		case AT_INIT:
+			sprintf(Display_buf , "AT_INIT......");
+		break;
+
+		case AT_IDLE:
+			sprintf(Display_buf , "AT_IDLE......");
+		break;
+
+		case AT_UPDATA:
+			sprintf(Display_buf , "AT_UPDATA....");
+		break;
+
+		case AT_GET_NTP:
+			sprintf(Display_buf , "AT_GET_NTP...");
+		break;
+	}
+	OLED_ShowString(0 , 16 , Display_buf , OLED_8X16);
+	
 //	rt_memset(Display_buf , 0 , sizeof(Display_buf));
-//	sprintf(Display_buf , "Temp:%.1f" , temperature);
-//	OLED_ShowString(0 , 8 , Display_buf , OLED_8X16);
+//	sprintf(Display_buf , "W25164 Status:");
+//	OLED_ShowString(0 , 32 , Display_buf , OLED_8X16);
 //	
+//	W25Q64_ReadID(&MID, &DID);
+
 //	rt_memset(Display_buf , 0 , sizeof(Display_buf));
-//	sprintf(Display_buf , "ADC:%.1f" , adc_light_intensity);
-//	OLED_ShowString(0 , 24 , Display_buf , OLED_8X16);
-
-	// rt_memset(Display_buf , 0 , sizeof(Display_buf));
-	// sprintf(Display_buf , "GX:%d GY:%d" , mpu6050.GX , mpu6050.GY);
-	// OLED_ShowString(0 , 24 , Display_buf , OLED_8X16);
-
-	// rt_memset(Display_buf , 0 , sizeof(Display_buf));
-	// sprintf(Display_buf , "GZ:%d" , mpu6050.GZ);
-	// OLED_ShowString(0 , 40 , Display_buf , OLED_8X16);
+//	sprintf(Display_buf , "MID:%x DID:%x" , MID , DID);
+//	OLED_ShowString(0 , 48 , Display_buf , OLED_8X16);
 	
 	OLED_Update();
 }

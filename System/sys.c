@@ -1,5 +1,5 @@
 #include "sys.h"
-
+#include "user_flash.h"
 
 /**
  * @brief 在二进制安全缓冲区中搜索子串
@@ -109,7 +109,7 @@ int board_init(void)
 	OLED_TASK_INIT();
 	io_tasl_init();
 	dwt_init();
-	
+//	W25Q64_Init();
 	return 1;
 }
 

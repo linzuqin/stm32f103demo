@@ -30,6 +30,9 @@
 #include <rthw.h>
 #include <rtthread.h>
 #include <stm32f10x_conf.h>
+#include <sfud.h>
+#include "sys.h"
+
 /* default environment variables set for user */
 
 
@@ -47,11 +50,11 @@ extern const ef_env default_env_set[];
  */
 EfErrCode ef_port_init(ef_env const **default_env, size_t *default_env_size) {
     EfErrCode result = EF_NO_ERR;
-          
+
     *default_env = default_env_set;
     *default_env_size = default_size;
-
-    rt_sem_init(&env_cache_lock, "env lock", 1, RT_IPC_FLAG_PRIO);
+    /* initialize SFUD library for SPI Flash */
+    sfud_init();
 
     return result;
 }
@@ -68,13 +71,19 @@ EfErrCode ef_port_init(ef_env const **default_env, size_t *default_env_size) {
  */
 EfErrCode ef_port_read(uint32_t addr, uint32_t *buf, size_t size) {
     EfErrCode result = EF_NO_ERR;
-    uint8_t *buf_8 = (uint8_t *)buf;
-    size_t i;
+    #if OFF_CHIP
+        const sfud_flash *flash = sfud_get_device_table() + SFUD_SST25_DEVICE_INDEX;
 
-    /*copy from flash to ram */
-    for (i = 0; i < size; i++, addr ++, buf_8++) {
-        *buf_8 = *(uint8_t *) addr;
-    }
+        sfud_read(flash, addr, size, (uint8_t *)buf);
+    #else
+        uint8_t *buf_8 = (uint8_t *)buf;
+        size_t i;
+
+        /*copy from flash to ram */
+        for (i = 0; i < size; i++, addr ++, buf_8++) {
+            *buf_8 = *(uint8_t *) addr;
+        }
+    #endif
 
     return result;
 }
@@ -91,29 +100,37 @@ EfErrCode ef_port_read(uint32_t addr, uint32_t *buf, size_t size) {
  */
 EfErrCode ef_port_erase(uint32_t addr, size_t size) {
     EfErrCode result = EF_NO_ERR;
-    FLASH_Status flash_status;
-    size_t erase_pages, i;
-    
     /* make sure the start address is a multiple of FLASH_ERASE_MIN_SIZE */
     EF_ASSERT(addr % EF_ERASE_MIN_SIZE == 0);
-    
-    /* calculate pages */
-    erase_pages = size / PAGE_SIZE;
-    if (size % PAGE_SIZE != 0) {
-        erase_pages++;
-    }
 
-    /* start erase */
-    FLASH_Unlock();
-    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
-    for (i = 0; i < erase_pages; i++) {
-        flash_status = FLASH_ErasePage(addr + (PAGE_SIZE * i));
-        if (flash_status != FLASH_COMPLETE) {
+    #if OFF_CHIP
+        sfud_err sfud_result = SFUD_SUCCESS;
+        const sfud_flash *flash = sfud_get_device_table() + SFUD_SST25_DEVICE_INDEX;
+        sfud_result = sfud_erase(flash, addr, size);
+        if(sfud_result != SFUD_SUCCESS) {
             result = EF_ERASE_ERR;
-            break;
         }
-    }
-    FLASH_Lock();
+    #else
+				FLASH_Status flash_status;
+				size_t erase_pages, i;
+        /* calculate pages */
+        erase_pages = size / PAGE_SIZE;
+        if (size % PAGE_SIZE != 0) {
+            erase_pages++;
+        }
+
+        /* start erase */
+        FLASH_Unlock();
+        FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
+        for (i = 0; i < erase_pages; i++) {
+            flash_status = FLASH_ErasePage(addr + (PAGE_SIZE * i));
+            if (flash_status != FLASH_COMPLETE) {
+                result = EF_ERASE_ERR;
+                break;
+            }
+        }
+        FLASH_Lock();
+    #endif
 
     return result;
 }
@@ -130,22 +147,34 @@ EfErrCode ef_port_erase(uint32_t addr, size_t size) {
  */
 EfErrCode ef_port_write(uint32_t addr, const uint32_t *buf, size_t size) {
     EfErrCode result = EF_NO_ERR;
-    size_t i;
-    uint32_t read_data;
+    #if OFF_CHIP
+        sfud_err sfud_result = SFUD_SUCCESS;
+        const sfud_flash *flash = sfud_get_device_table() + SFUD_SST25_DEVICE_INDEX;
 
-    FLASH_Unlock();
-    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
-    for (i = 0; i < size; i += 4, buf++, addr += 4) {
-        /* write data */
-        FLASH_ProgramWord(addr, *buf);
-        read_data = *(uint32_t *)addr;
-        /* check data */
-        if (read_data != *buf) {
+        sfud_result = sfud_write(flash, addr, size, (const uint8_t *)buf);
+
+        if(sfud_result != SFUD_SUCCESS) {
             result = EF_WRITE_ERR;
-            break;
         }
-    }
-    FLASH_Lock();
+
+    #else
+        size_t i;
+        uint32_t read_data;
+
+        FLASH_Unlock();
+        FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
+        for (i = 0; i < size; i += 4, buf++, addr += 4) {
+            /* write data */
+            FLASH_ProgramWord(addr, *buf);
+            read_data = *(uint32_t *)addr;
+            /* check data */
+            if (read_data != *buf) {
+                result = EF_WRITE_ERR;
+                break;
+            }
+        }
+        FLASH_Lock();
+    #endif
 
     return result;
 }
@@ -154,14 +183,14 @@ EfErrCode ef_port_write(uint32_t addr, const uint32_t *buf, size_t size) {
  * lock the ENV ram cache
  */
 void ef_port_env_lock(void) {
-    rt_sem_take(&env_cache_lock, RT_WAITING_FOREVER);
+    __disable_irq();
 }
 
 /**
  * unlock the ENV ram cache
  */
 void ef_port_env_unlock(void) {
-    rt_sem_release(&env_cache_lock);
+    __enable_irq();
 }
 
 
