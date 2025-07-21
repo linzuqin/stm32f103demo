@@ -22,7 +22,7 @@
 #define AT_RST_PORT     GPIOC
 #define AT_RST_PIN      GPIO_Pin_5
 
-#define AT_DEFAULT_UART_DEVICE  uart_devices[1]        //AT设备的串口
+#define AT_DEFAULT_UART_DEVICE  uart_devices[0]        //AT设备的串口
 
 #define AT_COMMAND_ARRAY_SIZE 16
 #define AT_MSG_SIZE 256                       //AT设备消息缓冲区大小
@@ -82,6 +82,23 @@ typedef struct
     uint8_t (*callback)(void *device ,void *a);     // Expected response string
 } AT_URC_t;
 
+typedef struct
+{
+  char *IP_Address;               // IP 地址
+  uint16_t Port;                  // 端口号
+  char *Product_ID;              // 产品 ID
+  char *Device_Name;              // 设备名称
+  char *SECRET_KEY;              // 设备密钥
+  char Token[256];                    // 令牌
+}mqtt_connect_params_t;
+
+typedef struct
+{
+  /* data */
+  char WiFi_SSID[32];                // WiFi SSID
+  char WiFi_Password[32];            // WiFi 密码
+}wifi_params_t;
+
 // 定义 AT 设备结构体
 typedef struct {
     AT_STATUS_TYPE_t status;                 // 设备状态
@@ -91,6 +108,8 @@ typedef struct {
     uint8_t *msg_buf;                   // 消息缓冲区
 		uint8_t init_step;									//初始化步骤
     uint8_t *rx_flag;                   //接收数据标志位
+    mqtt_connect_params_t mqtt_params; // MQTT 连接参数
+    wifi_params_t wifi_params;   // WiFi 连接参数
 } AT_Device_t;
 
 typedef enum
@@ -119,18 +138,6 @@ typedef enum
 
 }at_err_t;
 
-typedef struct AT_Function
-{
-  /* data */
-  char *WiFi_SSID;                // WiFi SSID
-  char *WiFi_Password;            // WiFi 密码
-  char *IP_Address;               // IP 地址
-  uint16_t Port;                  // 端口号
-  char *Product_ID;              // 产品 ID
-  char *Device_Name;              // 设备名称
-  char *SECRET_KEY;              // 设备密钥
-  char *Token;                    // 令牌
-}mqtt_connect_params_t;
 
 extern property_msg_t lot_msg[LOT_MSG_SIZE];
 extern AT_Device_t AT_Device;

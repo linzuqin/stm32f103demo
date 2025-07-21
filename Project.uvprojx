@@ -651,11 +651,6 @@
           <GroupName>Hardware</GroupName>
           <Files>
             <File>
-              <FileName>MyRTC.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Hardware\MyRTC.c</FilePath>
-            </File>
-            <File>
               <FileName>iwdog.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Hardware\iwdog.c</FilePath>
@@ -729,6 +724,16 @@
               <FileName>MySPI.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\Hardware\MySPI.h</FilePath>
+            </File>
+            <File>
+              <FileName>MyIIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Hardware\MyIIC.c</FilePath>
+            </File>
+            <File>
+              <FileName>MyIIC.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Hardware\MyIIC.h</FilePath>
             </File>
           </Files>
         </Group>

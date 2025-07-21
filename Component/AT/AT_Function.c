@@ -17,7 +17,20 @@ AT_Device_t AT_Device = {
     .msg_buf = at_msg_buf,
     .init_step = 0,
     .rx_flag = &(AT_DEFAULT_UART_DEVICE.rx_flag),
-    .status = AT_HW_INIT
+    .status = AT_HW_INIT,
+    .mqtt_params = 
+    {
+        .IP_Address = IP_ADDRESS,
+        .Port = PORT_NUMBER,
+        .Product_ID = PRODUCT_ID,
+        .Device_Name = DEVICE_NAME,
+        .SECRET_KEY = MY_SECRET_KEY,
+    },
+    .wifi_params = 
+    {
+        .WiFi_SSID = DEFAULT_WIFI_SSID,
+        .WiFi_Password = DEFAULT_WIFI_PWD
+    }
 };
 
 /***** 以下为测试时定义的变量 *****/
@@ -109,9 +122,6 @@ at_err_t AT_SendCmd(AT_Device_t *at_device, const char *cmd, const char *respons
     memset(full_cmd, 0, 256);
     snprintf(full_cmd, sizeof(full_cmd), "%s", cmd);
     net_send(at_device, (uint8_t *)full_cmd, strlen(full_cmd));
-
-    // 增加发送后的延时
-    at_delay_ms(100);
 
     // 等待应答
     uint32_t start_time = at_get_tick();
@@ -341,6 +351,8 @@ AT_CMD_t AT_Cmd_table[AT_COMMAND_ARRAY_SIZE] = {
 AT_URC_t AT_URC_table[AT_COMMAND_ARRAY_SIZE] = {
     {"+MQTTDISCONNECTED", MQTTDISCONNECTED_CallBack},
     {"+MQTTSUBRECV:", at_parase_callback},
+    {"ERROR", MQTTDISCONNECTED_CallBack},
+
 };
 
 static void at_device_register(AT_Device_t *at_device, AT_CMD_t *cmd_table, AT_URC_t *urc_table)
@@ -356,28 +368,18 @@ static void at_device_register(AT_Device_t *at_device, AT_CMD_t *cmd_table, AT_U
 
 void user_cmd_register(AT_Device_t *at_device)
 {
-    char token[256] = {0};
-    mqtt_connect_params_t mqtt_params = {
-        .WiFi_SSID = DEFAULT_WIFI_SSID,
-        .WiFi_Password = DEFAULT_WIFI_PWD,
-        .IP_Address = IP_ADDRESS,
-        .Port = PORT_NUMBER,
-        .Product_ID = PRODUCT_ID,
-        .Device_Name = DEVICE_NAME,
-        .SECRET_KEY = MY_SECRET_KEY,
-        .Token = token};
 
-    OneNET_Authorization("2018-10-31", mqtt_params.Product_ID, 1956499200, mqtt_params.SECRET_KEY, mqtt_params.Device_Name, token, sizeof(token), 1);
+    OneNET_Authorization("2018-10-31", at_device->mqtt_params.Product_ID, 1956499200, at_device->mqtt_params.SECRET_KEY, at_device->mqtt_params.Device_Name, at_device->mqtt_params.Token, sizeof(at_device->mqtt_params.Token), 1);
 
     AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
-                    "AT+CWJAP=\"%s\",\"%s\"\r\n", mqtt_params.WiFi_SSID, mqtt_params.WiFi_Password);
+                    "AT+CWJAP=\"%s\",\"%s\"\r\n", at_device->wifi_params.WiFi_SSID, at_device->wifi_params.WiFi_Password);
 
     AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
                     "AT+CIPSNTPCFG=1,8,\"ntp1.aliyun.com\"\r\n");
 
     AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
                     "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n",
-                    mqtt_params.Device_Name, mqtt_params.Product_ID, mqtt_params.Token);
+                    at_device->mqtt_params.Device_Name, at_device->mqtt_params.Product_ID, at_device->mqtt_params.Token);
 
     AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
                     "AT+MQTTCONNCFG=0,10,0,\"\",\"\",0,0\r\n");

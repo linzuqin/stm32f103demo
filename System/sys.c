@@ -107,9 +107,10 @@ int board_init(void)
 	my_uart_init();
 	AT_Thread_Init();
 	OLED_TASK_INIT();
-	io_tasl_init();
+	io_task_init();
 	dwt_init();
-//	W25Q64_Init();
+	TIM3_1s_Init();
+	//	W25Q64_Init();
 	return 1;
 }
 

@@ -23,6 +23,7 @@
 #include "onenet.h"
 #include "lot_function.h"
 #include "W25Q64.h"
+#include "MyIIC.h"
 
 #include "string.h"
 #include "stdio.h"

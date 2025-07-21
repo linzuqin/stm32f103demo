@@ -62,7 +62,7 @@ void IO_TASK(void *params)
 struct rt_thread IO_PANNEL;
 uint8_t io_stack[256];
 
-void io_tasl_init(void)
+void io_task_init(void)
 {
     rt_err_t result = RT_EOK;
     result = rt_thread_init(&IO_PANNEL , "io_task" , IO_TASK , RT_NULL , io_stack , sizeof(io_stack) , 22 , 100);

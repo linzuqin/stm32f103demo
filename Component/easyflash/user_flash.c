@@ -4,10 +4,14 @@ uint16_t boot_times = 0;
 uint16_t default_boot_times = 0;
 uint16_t default_test = 0;
 uint16_t test = 0;
+wifi_params_t default_fiwi_params = {
+	.WiFi_SSID = DEFAULT_WIFI_SSID,
+	.WiFi_Password = DEFAULT_WIFI_PWD
+};
 
 const ef_env default_env_set[] = {
 	{"boot_times",&default_boot_times , sizeof(default_boot_times)},
-	{"test",&default_test , sizeof(default_test)},
+	{"wifi",&default_fiwi_params , sizeof(default_fiwi_params)},
 
 };
 uint16_t default_size = sizeof(default_env_set) / sizeof(default_env_set[0]);
@@ -28,7 +32,8 @@ void user_flash_init(void)
 //		ef_env_set_default();
 		flash_get("boot_times", &boot_times, sizeof(boot_times),NULL);
 		boot_times ++;
-		flash_set("boot_times", &boot_times, sizeof(boot_times));		
+		flash_set("boot_times", &boot_times, sizeof(boot_times));	
+		flash_get("wifi_params", &AT_Device.wifi_params, sizeof(AT_Device.wifi_params),NULL);	
 	}
 }
 
@@ -45,21 +50,19 @@ void user_flash_task(void *params)
 	user_flash_init();
 	while(1)
 	{
-			if (rt_mb_recv(&mb, (rt_ubase_t *)&str, RT_WAITING_FOREVER) == RT_EOK)
+		if (rt_mb_recv(&mb, (rt_ubase_t *)&str, RT_WAITING_FOREVER) == RT_EOK)
+		{
+			if(strcmp(str , default_env_set[0].key) == 0)										//boot_times
 			{
-				if(strcmp(str , default_env_set[0].key) == 0)										//boot_times
-				{
-						
-				}
-				else if(strcmp(str , default_env_set[1].key) == 0)
-				{
-					flash_get(default_env_set[1].key, &test, sizeof(test),NULL);
-//					LOG_I("read test :%d" , test);
-					test ++;
-//					LOG_I("save test :%d" , test);
-					flash_set(default_env_set[1].key, &test, sizeof(test));		
-				}
+					
 			}
+			else if(strcmp(str , default_env_set[1].key) == 0)
+			{
+				flash_set(default_env_set[1].key, &AT_Device.wifi_params, sizeof(AT_Device.wifi_params));	//wifi params
+				NVIC_SystemReset();
+
+			}
+		}
 		rt_thread_mdelay(500);
 	}
 }

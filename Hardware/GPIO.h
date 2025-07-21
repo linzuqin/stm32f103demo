@@ -15,7 +15,7 @@ typedef struct
 }MY_GPIO_t;
 
 void MyGPIO_Init(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIOMode_TypeDef mode);
-void io_tasl_init(void);
+void io_task_init(void);
 
 
 

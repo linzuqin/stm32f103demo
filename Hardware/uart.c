@@ -199,6 +199,7 @@ void My_UART_Init(uart_device_t *uart_device) {
 	
 	USART_Cmd(uart_device->port, ENABLE);
 
+  rt_mutex_init(&(uart_device->rx_mutex), "uart_rx_mutex", RT_IPC_FLAG_PRIO);
 }
 
 void UART_SendData(uart_device_t *uart_device, uint8_t *data, uint16_t size) 
@@ -402,7 +403,6 @@ void uartbuf_clear(uart_device_t *uart_device)
 	DMA_Cmd(uart_device->rx_dma_channel, DISABLE);
 	DMA_SetCurrDataCounter(uart_device->rx_dma_channel, uart_device->rx_max_size);
 	DMA_Cmd(uart_device->rx_dma_channel, ENABLE);	
-
 }
 
 void USART_IRQHandler(uart_device_t *uart_device, uint8_t id) {
@@ -410,29 +410,34 @@ void USART_IRQHandler(uart_device_t *uart_device, uint8_t id) {
         USART_ITConfig(uart_device->port, USART_IT_IDLE, DISABLE);
         
         volatile uint32_t tmp;
-        tmp = uart_device->port->SR;
-        tmp = uart_device->port->DR;
+        tmp = uart_device->port->SR;   // 清除状态标志
+        tmp = uart_device->port->DR;   // 清除数据寄存器
         USART_ClearITPendingBit(uart_device->port, USART_IT_IDLE);
 
         uint32_t timeout = 100000;
-        while ( timeout--);
+        while (timeout--);  // 短暂延时（可优化）
 
+        // 计算接收到的数据长度
         uart_device->rx_size = uart_device->rx_max_size - 
                               DMA_GetCurrDataCounter(uart_device->rx_dma_channel);
 
-        uint32_t primask = __get_PRIMASK();
-        __disable_irq();
-        ringbuf_put(uart_device->ring_buf, uart_device->rx_buffer, uart_device->rx_size);
-        __set_PRIMASK(primask);
+        // 使用互斥锁保护 ring_buf 操作
+        if (rt_mutex_take(&uart_device->rx_mutex, RT_WAITING_FOREVER) == RT_EOK) {
+            ringbuf_put(uart_device->ring_buf, uart_device->rx_buffer, uart_device->rx_size);
+            rt_mutex_release(&uart_device->rx_mutex);
+        }
 
-        uart_device->rx_flag = 1;  
+        uart_device->rx_flag = 1;  // 设置接收完成标志
+
+        // 重新配置 DMA
         DMA_Cmd(uart_device->rx_dma_channel, DISABLE);
         DMA_SetCurrDataCounter(uart_device->rx_dma_channel, uart_device->rx_max_size);
         DMA_Cmd(uart_device->rx_dma_channel, ENABLE);
 
-        USART_ITConfig(uart_device->port, USART_IT_IDLE, ENABLE);
+        USART_ITConfig(uart_device->port, USART_IT_IDLE, ENABLE);  // 重新使能 IDLE 中断
     }
 }
+
 
 
 void USART1_IRQHandler(void) {

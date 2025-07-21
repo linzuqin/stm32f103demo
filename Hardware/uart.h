@@ -44,6 +44,7 @@ typedef struct uart
 	DMA_Channel_TypeDef * tx_dma_channel;
 	
 	ring_buf_t *ring_buf;					//串口环形缓冲区
+	struct rt_mutex rx_mutex;          // 互斥锁对象（静态）
 
 }uart_device_t;
 
