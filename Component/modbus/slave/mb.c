@@ -167,13 +167,9 @@ eMBInit( eMBMode eMode, UCHAR ucSlaveAddress, ULONG ulBaudRate, eMBParity eParit
 #if MB_RTU_ENABLED > 0
         case MB_RTU:
             pvMBFrameStartCur = eMBRTUStart;
-            pvMBFrameStopCur = eMBRTUStop;
             peMBFrameSendCur = eMBRTUSend;
             peMBFrameReceiveCur = eMBRTUReceive;
             pvMBFrameCloseCur = MB_PORT_HAS_CLOSE ? vMBPortClose : NULL;
-            pxMBFrameCBByteReceived = xMBRTUReceiveFSM;
-            //pxMBFrameCBTransmitterEmpty = xMBRTUTransmitFSM;
-            pxMBPortCBTimerExpired = xMBRTUTimerT35Expired;
 
             eStatus = eMBRTUInit( ucMBAddress, ulBaudRate, eParity );
             break;
@@ -289,44 +285,6 @@ eMBRegisterCB( UCHAR ucFunctionCode, pxMBFunctionHandler pxHandler )
     return eStatus;
 }
 
-
-eMBErrorCode
-eMBClose( void )
-{
-    eMBErrorCode    eStatus = MB_ENOERR;
-
-    if( eMBState == STATE_DISABLED )
-    {
-        if( pvMBFrameCloseCur != NULL )
-        {
-            pvMBFrameCloseCur(  );
-        }
-    }
-    else
-    {
-        eStatus = MB_EILLSTATE;
-    }
-    return eStatus;
-}
-
-eMBErrorCode
-eMBEnable( void )
-{
-    eMBErrorCode    eStatus = MB_ENOERR;
-
-    if( eMBState == STATE_DISABLED )
-    {
-        /* Activate the protocol stack. */
-        pvMBFrameStartCur(  );
-        eMBState = STATE_ENABLED;
-    }
-    else
-    {
-        eStatus = MB_EILLSTATE;
-    }
-    return eStatus;
-}
-
 eMBErrorCode
 eMBDisable( void )
 {
@@ -361,12 +319,6 @@ eMBPoll( void )
     int             i;
     eMBErrorCode    eStatus = MB_ENOERR;
     eMBEventType    eEvent;
-
-    /* Check if the protocol stack is ready. */
-    if( eMBState != STATE_ENABLED )
-    {
-        return MB_EILLSTATE;
-    }
 
     /* Check if there is a event available. If not return control to caller.
      * Otherwise we will handle the event. */
@@ -422,7 +374,7 @@ eMBPoll( void )
                     rt_thread_mdelay( MB_ASCII_TIMEOUT_WAIT_BEFORE_SEND_MS );
                 }                
                 eStatus = peMBFrameSendCur(port , ucMBAddress, ucMBFrame, usLength );
-            }
+            } 
             break;
 
         case EV_FRAME_SENT:

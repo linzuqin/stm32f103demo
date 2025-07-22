@@ -9,11 +9,11 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-#define uart1_rx_size    64 // Size of the UART receive buffer
-#define uart2_rx_size    256 // Size of the UART receive buffer
-#define uart3_rx_size    64 // Size of the UART receive buffer
-#define uart4_rx_size    64 // Size of the UART receive buffer
-#define uart5_rx_size    64 // Size of the UART receive buffer
+#define uart1_rx_size    64 + 3 // Size of the UART receive buffer
+#define uart2_rx_size    256 + 3 // Size of the UART receive buffer
+#define uart3_rx_size    64 + 3 // Size of the UART receive buffer
+#define uart4_rx_size    64 + 3 // Size of the UART receive buffer
+#define uart5_rx_size    64 + 3 // Size of the UART receive buffer
 
 #define uart1_tx_size    64 // Size of the UART receive buffer
 #define uart2_tx_size    64 // Size of the UART receive buffer
@@ -63,6 +63,7 @@ const void* binary_strstr(const void* haystack, size_t h_len,
 void uartbuf_clear(uart_device_t *uart_device);
 uint16_t ringbuf_get(ring_buf_t* rb, uint8_t* dest, uint16_t len);
 void ring_reset(ring_buf_t* rb);
+void My_UART_Init(uart_device_t *uart_device);
 
 // 快速计算缓冲区剩余空间（宏避免函数调用开销）
 #define RINGBUF_FREE(rb) ((rb)->tail > (rb)->head ? (rb)->tail - (rb)->head - 1 : (rb)->size + (rb)->tail - (rb)->head - 1)

@@ -157,7 +157,7 @@ void My_UART_Init(uart_device_t *uart_device) {
 		DMA_InitTypeDef DMA_RxInitStructure;
 
     DMA_DeInit(uart_device->rx_dma_channel);
-    DMA_RxInitStructure.DMA_MemoryBaseAddr = (uint32_t)&uart_device->rx_buffer[0];
+    DMA_RxInitStructure.DMA_MemoryBaseAddr = (uint32_t)&uart_device->rx_buffer[3];
     DMA_RxInitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
     DMA_RxInitStructure.DMA_BufferSize = rx_size;
     DMA_RxInitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
@@ -413,19 +413,23 @@ void USART_IRQHandler(uart_device_t *uart_device, uint8_t id) {
         tmp = uart_device->port->SR;   // 清除状态标志
         tmp = uart_device->port->DR;   // 清除数据寄存器
         USART_ClearITPendingBit(uart_device->port, USART_IT_IDLE);
-
+		
         uint32_t timeout = 100000;
         while (timeout--);  // 短暂延时（可优化）
 
         // 计算接收到的数据长度
-        uart_device->rx_size = uart_device->rx_max_size - 
-                              DMA_GetCurrDataCounter(uart_device->rx_dma_channel);
+        uart_device->rx_size = uart_device->rx_max_size - DMA_GetCurrDataCounter(uart_device->rx_dma_channel);
 
+				uart_device->rx_buffer[0] = id;
+				uart_device->rx_buffer[1] = uart_device->rx_size >> 8;
+				uart_device->rx_buffer[2] = uart_device->rx_size & 0xff;			
+			
         // 使用互斥锁保护 ring_buf 操作
         if (rt_mutex_take(&uart_device->rx_mutex, RT_WAITING_FOREVER) == RT_EOK) {
-            ringbuf_put(uart_device->ring_buf, uart_device->rx_buffer, uart_device->rx_size);
+            ringbuf_put(uart_device->ring_buf, &(uart_device->rx_buffer[3]), uart_device->rx_size);
             rt_mutex_release(&uart_device->rx_mutex);
         }
+
 
         uart_device->rx_flag = 1;  // 设置接收完成标志
 

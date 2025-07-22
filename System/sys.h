@@ -49,9 +49,9 @@
 #define MODBUS_MASTER_SENSOR_DEVICE        uart3_device
 #endif
 
-#define MODBUS_SLAVE_ENABLE        0
+#define MODBUS_SLAVE_ENABLE        1
 #if MODBUS_SLAVE_ENABLE
-#define MB_S_DEVICE_1							uart1_device
+#define MB_S_DEVICE_1							uart_devices[1]
 #define MODBUS_SLAVE_ADDR						1  //device addr
 #define MODBUS_SLAVE_BOUND					115200 //baudrate
 #endif

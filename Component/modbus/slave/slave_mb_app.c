@@ -30,9 +30,9 @@ uint8_t MODBUS_RX_PANNEL_STACK[MODBUS_RX_PANNEL_STACK_SIZE];
 static struct rt_thread MODBUS_PANNEL;
 uint8_t MODBUS_PANNEL_STACK[MODBUS_PANNEL_STACK_SIZE];
 
-struct rt_messagequeue  modbus_rx_mq;								
 #define MODBUS_RX_LEN    256									
-uint8_t MODBUS_Rx_MQ[MODBUS_RX_LEN * 3];					
+
+extern UCHAR  ucRTUBuf[256];
 
 /**
  * Modbus slave input register callback function.
@@ -285,18 +285,23 @@ static void MODBUS_RX_TASK(void *params)
 	uint8_t buf[MODBUS_RX_LEN];
 	while(1)
 	{
-		if(rt_mq_recv(&modbus_rx_mq, buf, MODBUS_RX_LEN, RT_WAITING_FOREVER) == RT_EOK)
+		if(MB_S_DEVICE_1.rx_flag == 1)
 		{
-			prvvUARTRxISR(buf);
-			rt_memset(buf,0,MODBUS_RX_LEN);
+			MB_S_DEVICE_1.rx_flag = 0;
+			memcpy(ucRTUBuf , MB_S_DEVICE_1.rx_buffer , MB_S_DEVICE_1.rx_buffer[1] << 8 | MB_S_DEVICE_1.rx_buffer[2] + 3);
+      xMBPortEventPost( EV_FRAME_RECEIVED );
+
+			rt_memset(MB_S_DEVICE_1.rx_buffer,0,uart1_rx_size);
 		}
+		rt_thread_mdelay(10);
+
 	}
 }
 
 static void  MODBUS_TASK(void *params)
 {
 	eMBInit(MB_RTU , MODBUS_SLAVE_ADDR ,MODBUS_SLAVE_BOUND , MB_PAR_NONE);
-	eMBEnable();
+//	eMBEnable();
 	while(1)
 	{
 		eMBPoll();
@@ -307,12 +312,6 @@ static void  MODBUS_TASK(void *params)
 int MODBUS_INIT(void)
 {
 	rt_err_t result = 0;
-	result = rt_mq_init(&modbus_rx_mq , "modbus_rx_mq" , &MODBUS_Rx_MQ[0] , MODBUS_RX_LEN , sizeof(MODBUS_Rx_MQ) , RT_IPC_FLAG_FIFO );
-	if (result != RT_EOK)
-	{
-		//LOG_E("Failed to initialize modbus_rx_mq\r\n");
-		return 0;
-	}
 
 	result = rt_thread_init(&MODBUS_RX_PANNEL , "mb_rx" , MODBUS_RX_TASK , RT_NULL , &MODBUS_RX_PANNEL_STACK[0] , sizeof(MODBUS_RX_PANNEL_STACK) , 22 , 100);
 	if(result == RT_EOK)

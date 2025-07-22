@@ -21,6 +21,7 @@
 
 #include "port.h"
 #include "sys.h"
+#include "uart.h"
 
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
@@ -51,28 +52,6 @@ xMBPortSerialPutByte(uint8_t port , UCHAR *ucByte , uint16_t len)//适配串口�
 		UART_SendData(mb_device , ucByte , len);
 		return TRUE;
 }
-
-//BOOL
-//xMBPortSerialGetByte(uint8_t *pucByte)//适配串口接收函数
-//{
-//    /* Return the byte in the UARTs receive buffer. This function is called
-//     * by the protocol stack after pxMBFrameCBByteReceived( ) has been called.
-//     */
-//		memcpy(pucByte , UART4_RxData , UART4_RxData[0] + 1);
-//		memset(UART4_RxData , 0 , 256);
-//    return TRUE;
-//}
-
-/* Create an interrupt handler for the transmit buffer empty interrupt
- * (or an equivalent) for your target processor. This function should then
- * call pxMBFrameCBTransmitterEmpty( ) which tells the protocol stack that
- * a new character can be sent. The protocol stack will then call
- * xMBPortSerialPutByte( ) to send the character.
- */
-//static void prvvUARTTxReadyISR(void)
-//{
-//    pxMBFrameCBTransmitterEmpty();
-//}
 
 /* Create an interrupt handler for the receive interrupt for your target
  * processor. This function should then call pxMBFrameCBByteReceived( ). The

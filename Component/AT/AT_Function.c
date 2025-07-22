@@ -34,13 +34,13 @@ AT_Device_t AT_Device = {
 };
 
 /***** 以下为测试时定义的变量 *****/
-uint8_t j_1_value = 0;
-char j_2_value[LOT_STRING_SIZE];
-uint8_t j_3_value[LOT_ARRAY_SIZE];
+//uint8_t j_1_value = 0;
+//char j_2_value[LOT_STRING_SIZE];
+//uint8_t j_3_value[LOT_ARRAY_SIZE];
 
-uint8_t object_j_1_value = 0;
-char object_j_2_value[LOT_STRING_SIZE];
-uint8_t object_j_3_value[LOT_ARRAY_SIZE];
+//uint8_t object_j_1_value = 0;
+//char object_j_2_value[LOT_STRING_SIZE];
+//uint8_t object_j_3_value[LOT_ARRAY_SIZE];
 
 property_msg_t lot_msg_son[5] = {
 //    [0] = {.key = "j_1", .type = bool_type, .value.property_value = &object_j_1_value},

@@ -46,8 +46,10 @@
 #define MB_SER_PDU_SIZE_MIN     4       /*!< Minimum size of a Modbus RTU frame. */
 #define MB_SER_PDU_SIZE_MAX     256     /*!< Maximum size of a Modbus RTU frame. */
 #define MB_SER_PDU_SIZE_CRC     2       /*!< Size of CRC field in PDU. */
-#define MB_SER_PDU_ADDR_OFF     0       /*!< Offset of slave address in Ser-PDU. */
+#define MB_SER_PDU_ADDR_OFF     3       /*!< Offset of slave address in Ser-PDU. */
 #define MB_SER_PDU_PDU_OFF      1       /*!< Offset of Modbus-PDU in Ser-PDU. */
+#define MB_CMD_START_BIT        3       /*!< Offset of Modbus-PDU in Ser-PDU. */
+#define MB_SEND_PDU_ADDR     		0       /*!< Offset of slave address in Ser-PDU. */
 
 /* ----------------------- Type definitions ---------------------------------*/
 typedef enum
@@ -136,13 +138,6 @@ eMBRTUStart( void )
     EXIT_CRITICAL_SECTION(  );
 }
 
-void
-eMBRTUStop( void )
-{
-    ENTER_CRITICAL_SECTION(  );
-    EXIT_CRITICAL_SECTION(  );
-}
-
 eMBErrorCode
 eMBRTUReceive(uint8_t *port ,  UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT * pusLength )
 {
@@ -152,14 +147,15 @@ eMBRTUReceive(uint8_t *port ,  UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT 
     ENTER_CRITICAL_SECTION(  );
     //assert( usRcvBufferPos < MB_SER_PDU_SIZE_MAX );
 		*port = ucRTUBuf[0];
+		usRcvBufferPos = ucRTUBuf[1] << 8 | ucRTUBuf[2];
     /* Length and CRC check */
     if( ( usRcvBufferPos >= MB_SER_PDU_SIZE_MIN )
-        && ( usMBCRC16( ( UCHAR * ) &ucRTUBuf[2], usRcvBufferPos ) == 0 ) )
+        && ( usMBCRC16( ( UCHAR * ) &ucRTUBuf[MB_CMD_START_BIT], usRcvBufferPos ) == 0 ) )
     {
         /* Save the address field. All frames are passed to the upper layed
          * and the decision if a frame is used is done there.
          */
-        *pucRcvAddress = ucRTUBuf[MB_SER_PDU_ADDR_OFF + 2];
+        *pucRcvAddress = ucRTUBuf[MB_SER_PDU_ADDR_OFF];
 
         /* Total length of Modbus-PDU is Modbus-Serial-Line-PDU minus
          * size of address field and CRC checksum.
@@ -167,7 +163,7 @@ eMBRTUReceive(uint8_t *port ,  UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT 
         *pusLength = ( USHORT )( usRcvBufferPos - MB_SER_PDU_PDU_OFF - MB_SER_PDU_SIZE_CRC );
 
         /* Return the start of the Modbus PDU to the caller. */
-        *pucFrame = ( UCHAR * ) & ucRTUBuf[MB_SER_PDU_PDU_OFF + 2];
+        *pucFrame = ( UCHAR * ) & ucRTUBuf[MB_CMD_START_BIT + MB_SER_PDU_PDU_OFF];
         //xFrameReceived = TRUE;
     }
     else
@@ -191,168 +187,32 @@ eMBRTUSend(uint8_t port , UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT u
      * slow with processing the received frame and the master sent another
      * frame on the network. We have to abort sending the frame.
      */
-    if( eRcvState == STATE_RX_IDLE )
-    {
+
         /* First byte before the Modbus-PDU is the slave address. */
         pucSndBufferCur = ( UCHAR * ) pucFrame - 1;
         usSndBufferCount = 1;
 
         /* Now copy the Modbus-PDU into the Modbus-Serial-Line-PDU. */
-        pucSndBufferCur[MB_SER_PDU_ADDR_OFF] = ucSlaveAddress;
+        pucSndBufferCur[MB_SEND_PDU_ADDR] = ucSlaveAddress;
         usSndBufferCount += usLength;
 
         /* Calculate CRC16 checksum for Modbus-Serial-Line-PDU. */
         usCRC16 = usMBCRC16( ( UCHAR * ) pucSndBufferCur, usSndBufferCount );
-        ucRTUBuf[2+usSndBufferCount++] = ( UCHAR )( usCRC16 & 0xFF );
-        ucRTUBuf[2+usSndBufferCount++] = ( UCHAR )( usCRC16 >> 8 );
+        pucSndBufferCur[usSndBufferCount++] = ( UCHAR )( usCRC16 & 0xFF );
+        pucSndBufferCur[usSndBufferCount++] = ( UCHAR )( usCRC16 >> 8 );
 
         /* Activate the transmitter. */
-        eSndState = STATE_TX_XMIT;
 				if(usSndBufferCount != 0)
 				{
 						xMBPortSerialPutByte(port , pucSndBufferCur , usSndBufferCount);
 						usSndBufferCount = 0;
 
 				}
+				else
+				{
+					eStatus = MB_EINVAL;
+				}
 
-    }
-    else
-    {
-        eStatus = MB_EIO;
-    }
     EXIT_CRITICAL_SECTION(  );
     return eStatus;
-}
-
-BOOL
-xMBRTUReceiveFSM( uint8_t* data )
-{
-    BOOL            xTaskNeedSwitch = FALSE;
-    uint8_t            ucByte[256];
-
-    //assert( eSndState == STATE_TX_IDLE );
-
-    /* Always read the character. */
-
-    switch ( eRcvState )
-    {
-        /* If we have received a character in the init state we have to
-         * wait until the frame is finished.
-         */
-    case STATE_RX_INIT:
-        vMBPortTimersEnable(  );
-        break;
-
-        /* In the error state we wait until all characters in the
-         * damaged frame are transmitted.
-         */
-    case STATE_RX_ERROR:
-        vMBPortTimersEnable(  );
-        break;
-
-        /* In the idle state we wait for a new character. If a character
-         * is received the t1.5 and t3.5 timers are started and the
-         * receiver is in the state STATE_RX_RECEIVCE.
-         */
-    case STATE_RX_IDLE:
-        usRcvBufferPos = data[1];
-        //ucRTUBuf[usRcvBufferPos++] = ucByte;
-				memcpy(ucRTUBuf , data , data[1] + 2);
-
-        eRcvState = STATE_RX_RCV;
-
-        /* Enable t3.5 timers. */
-        vMBPortTimersEnable(  );
-        break;
-
-        /* We are currently receiving a frame. Reset the timer after
-         * every character received. If more than the maximum possible
-         * number of bytes in a modbus frame is received the frame is
-         * ignored.
-         */
-    case STATE_RX_RCV:
-//        if( usRcvBufferPos < MB_SER_PDU_SIZE_MAX )
-//        {
-//            ucRTUBuf[usRcvBufferPos++] = ucByte;
-//        }
-//        else
-//        {
-//            eRcvState = STATE_RX_ERROR;
-//        }
-				memcpy(ucRTUBuf , &ucByte[1] , ucByte[0]);
-
-        vMBPortTimersEnable(  );
-        break;
-    }
-    return xTaskNeedSwitch;
-}
-
-//BOOL
-//xMBRTUTransmitFSM( void )
-//{
-//    BOOL            xNeedPoll = FALSE;
-
-//    assert( eRcvState == STATE_RX_IDLE );
-
-//    switch ( eSndState )
-//    {
-//        /* We should not get a transmitter event if the transmitter is in
-//         * idle state.  */
-//    case STATE_TX_IDLE:
-//        /* enable receiver/disable transmitter. */
-//        break;
-
-//    case STATE_TX_XMIT:
-//        /* check if we are finished. */
-//				if(usSndBufferCount != 0)
-//				{
-//						xMBPortSerialPutByte(pucSndBufferCur , usSndBufferCount);
-//						usSndBufferCount = 0;
-//				}
-//        else
-//        {
-//            xNeedPoll = xMBPortEventPost( EV_FRAME_SENT );
-//            /* Disable transmitter. This prevents another transmit buffer
-//             * empty interrupt. */
-//            eSndState = STATE_TX_IDLE;
-//        }
-//        break;
-//    }
-
-//    return xNeedPoll;
-//}
-
-BOOL
-xMBRTUTimerT35Expired( void )
-{
-    BOOL            xNeedPoll = FALSE;
-
-    switch ( eRcvState )
-    {
-        /* Timer t35 expired. Startup phase is finished. */
-    case STATE_RX_INIT:
-        xNeedPoll = xMBPortEventPost( EV_READY );
-        break;
-
-        /* A frame was received and t35 expired. Notify the listener that
-         * a new frame was received. */
-    case STATE_RX_RCV:
-        xNeedPoll = xMBPortEventPost( EV_FRAME_RECEIVED );
-        break;
-
-        /* An error occured while receiving the frame. */
-    case STATE_RX_ERROR:
-        break;
-
-        /* Function called in an illegal state. */
-    default:
-//        assert( ( eRcvState == STATE_RX_INIT ) ||
-//                ( eRcvState == STATE_RX_RCV ) || ( eRcvState == STATE_RX_ERROR ) );
-		break;
-    }
-
-    vMBPortTimersDisable(  );
-    eRcvState = STATE_RX_IDLE;
-
-    return xNeedPoll;
 }
