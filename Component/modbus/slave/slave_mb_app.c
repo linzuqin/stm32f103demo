@@ -309,7 +309,7 @@ static void  MODBUS_TASK(void *params)
 	}
 }
 
-int MODBUS_INIT(void)
+void MODBUS_INIT(void)
 {
 	rt_err_t result = 0;
 
@@ -334,9 +334,6 @@ int MODBUS_INIT(void)
 	{
 		//LOG_E("MODBUS TASK START FAIL\r\n");
 	}  
-    return 1;
 }
-
-INIT_APP_EXPORT(MODBUS_INIT);
 
 #endif

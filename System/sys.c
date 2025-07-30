@@ -110,6 +110,7 @@ int board_init(void)
 	io_task_init();
 	dwt_init();
 	TIM3_1s_Init();
+	MODBUS_INIT();
 	//	W25Q64_Init();
 	return 1;
 }

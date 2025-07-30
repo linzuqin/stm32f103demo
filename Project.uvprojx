@@ -865,11 +865,6 @@
               <FileType>1</FileType>
               <FilePath>.\Component\modbus\slave\slave_mb_app.c</FilePath>
             </File>
-            <File>
-              <FileName>slave_mb_app.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\Component\modbus\slave\slave_mb_app.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

@@ -6,4 +6,6 @@
 #include "mbframe.h"
 #include "mbutils.h"
 
+void MODBUS_INIT(void);
+
 #endif
