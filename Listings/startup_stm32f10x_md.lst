@@ -72,23 +72,23 @@ ARM Macro Assembler    Page 2
    41 00000600         ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
    42 00000600         ; </h>
    43 00000600         
-   44 00000600 00000600 
+   44 00000600 00000D00 
                        Heap_Size
-                               EQU              0x00000600
+                               EQU              0x00000D00
    45 00000600         
    46 00000600                 AREA             HEAP, NOINIT, READWRITE, ALIGN=
 3
    47 00000000         __heap_base
    48 00000000         Heap_Mem
                                SPACE            Heap_Size
-   49 00000600         __heap_limit
-   50 00000600         
-   51 00000600                 PRESERVE8
-   52 00000600                 THUMB
-   53 00000600         
-   54 00000600         
-   55 00000600         ; Vector Table Mapped to Address 0 at Reset
-   56 00000600                 AREA             RESET, DATA, READONLY
+   49 00000D00         __heap_limit
+   50 00000D00         
+   51 00000D00                 PRESERVE8
+   52 00000D00                 THUMB
+   53 00000D00         
+   54 00000D00         
+   55 00000D00         ; Vector Table Mapped to Address 0 at Reset
+   56 00000D00                 AREA             RESET, DATA, READONLY
    57 00000000                 EXPORT           __Vectors
    58 00000000                 EXPORT           __Vectors_End
    59 00000000                 EXPORT           __Vectors_Size
@@ -466,11 +466,11 @@ ARM Macro Assembler    Page 8
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M3 --depe
 nd=.\objects\startup_stm32f10x_md.d -o.\objects\startup_stm32f10x_md.o -I.\RTE\
 RTOS -I.\RTE\_C8T6 -ID:\KEIL\PACK\ARM\CMSIS\6.2.0\CMSIS\Core\Include -ID:\KEIL\
-PACK\Keil\STM32F1xx_DFP\2.4.1\Device\Include -ID:\KEIL\PACK\MDK-Packs\cJSON\1.0
-.0 -ID:\KEIL\PACK\RealThread\RT-Thread\3.1.5\include --predefine="__MICROLIB SE
-TA 1" --predefine="__UVISION_VERSION SETA 542" --predefine="STM32F10X_MD SETA 1
-" --predefine="_RTE_ SETA 1" --list=.\listings\startup_stm32f10x_md.lst Start\s
-tartup_stm32f10x_md.s
+PACK\Keil\STM32F1xx_DFP\2.4.1\Device\Include -ID:\KEIL\PACK\Keil\STM32F1xx_DFP\
+2.4.1\RTE_Driver -ID:\KEIL\PACK\MDK-Packs\cJSON\1.0.0 -ID:\KEIL\PACK\RealThread
+\RT-Thread\3.1.5\include --predefine="__MICROLIB SETA 1" --predefine="__UVISION
+_VERSION SETA 542" --predefine="STM32F10X_MD SETA 1" --predefine="_RTE_ SETA 1"
+ --list=.\listings\startup_stm32f10x_md.lst Start\startup_stm32f10x_md.s
 
 
 
@@ -533,7 +533,7 @@ Symbol: __heap_base
    Uses
       At line 285 in file Start\startup_stm32f10x_md.s
 Comment: __heap_base used once
-__heap_limit 00000600
+__heap_limit 00000D00
 
 Symbol: __heap_limit
    Definitions
@@ -1129,7 +1129,7 @@ Symbol: WWDG_IRQHandler
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Absolute symbols
 
-Heap_Size 00000600
+Heap_Size 00000D00
 
 Symbol: Heap_Size
    Definitions

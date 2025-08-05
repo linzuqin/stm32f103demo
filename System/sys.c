@@ -103,15 +103,14 @@ void rt_hw_us_delay(uint32_t us)
 
 int board_init(void)
 {
-	user_flash_task_init();
+//	user_flash_task_init();
 	my_uart_init();
 	AT_Thread_Init();
-	OLED_TASK_INIT();
+//	OLED_TASK_INIT();
 	io_task_init();
 	dwt_init();
-	TIM3_1s_Init();
-	MODBUS_INIT();
-	//	W25Q64_Init();
+//	TIM3_1s_Init();
+//	MODBUS_INIT();
 	return 1;
 }
 

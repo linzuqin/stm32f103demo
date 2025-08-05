@@ -285,13 +285,13 @@ static void MODBUS_RX_TASK(void *params)
 	uint8_t buf[MODBUS_RX_LEN];
 	while(1)
 	{
-		if(MB_S_DEVICE_1.rx_flag == 1)
+		if(uart_devices[MB_S_DEVICE_1].rx_flag == 1)
 		{
-			MB_S_DEVICE_1.rx_flag = 0;
-			memcpy(ucRTUBuf , MB_S_DEVICE_1.rx_buffer , MB_S_DEVICE_1.rx_buffer[1] << 8 | MB_S_DEVICE_1.rx_buffer[2] + 3);
+			uart_devices[MB_S_DEVICE_1].rx_flag = 0;
+			memcpy(ucRTUBuf , uart_devices[MB_S_DEVICE_1].rx_buffer , uart_devices[MB_S_DEVICE_1].rx_buffer[1] << 8 | uart_devices[MB_S_DEVICE_1].rx_buffer[2] + 3);
       xMBPortEventPost( EV_FRAME_RECEIVED );
 
-			rt_memset(MB_S_DEVICE_1.rx_buffer,0,uart1_rx_size);
+			rt_memset(uart_devices[MB_S_DEVICE_1].rx_buffer,0,uart1_rx_size);
 		}
 		rt_thread_mdelay(10);
 

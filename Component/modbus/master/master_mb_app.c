@@ -20,17 +20,14 @@ void User_master_task(void *params)
     uint8_t i = 0;
     while (1) 
     {
-        mater_mb_coil_read(ctx , 1 , 0 , coil_reg , 10 , MB_M_DEVICE.rx_buffer);
-        mater_mb_disc_read(ctx , 1 , 0 , disc_reg , 10 , MB_M_DEVICE.rx_buffer);
-        mater_mb_hold_read(ctx , 1 , 0 , hold_reg , 10 , MB_M_DEVICE.rx_buffer);
-        mater_mb_input_read(ctx , 1 , 0 , input_reg , 10 , MB_M_DEVICE.rx_buffer);
+        mater_mb_coil_read(ctx , 1 , 0 , coil_reg , 10 , uart_devices[MB_M_DEVICE].rx_buffer);
+        mater_mb_disc_read(ctx , 1 , 0 , disc_reg , 10 , uart_devices[MB_M_DEVICE].rx_buffer);
+        mater_mb_hold_read(ctx , 1 , 0 , hold_reg , 10 , uart_devices[MB_M_DEVICE].rx_buffer);
+        mater_mb_input_read(ctx , 1 , 0 , input_reg , 10 , uart_devices[MB_M_DEVICE].rx_buffer);
         
 
-        LOG_I("coil_reg [%d]: 0x%04X", 0, coil_reg[0]);
-        LOG_I("disc_reg [%d]: 0x%04X", 0, disc_reg[0]);
-        LOG_I("hold_reg [%d]: 0x%04X", 0, hold_reg[0]);
-        LOG_I("input_reg [%d]: 0x%04X", 0, input_reg[0]);
-        mater_mb_hold_write(ctx , 1 , 0 , i++ , MB_M_DEVICE.rx_buffer);
+        
+        mater_mb_hold_write(ctx , 1 , 0 , i++ , uart_devices[MB_M_DEVICE].rx_buffer);
         rt_thread_mdelay(1000);
     }
 }
@@ -42,15 +39,15 @@ static int User_master_start(void)
     if (result == RT_EOK)
     {
         rt_thread_startup(&MASTER_MB_PANNEL);
-        LOG_I("MASTER_MB TASK START OK\r\n");
+        
     }
     else
     {
-        LOG_E("MASTER_MB TASK START FAIL\r\n");
+       
     }
 		
     #if MODBUS_MASTER_ENABLE
-        My_UART_Init(&MB_M_DEVICE);
+        My_UART_Init(&uart_devices[MB_M_DEVICE]);
     #endif
 
     return 1;

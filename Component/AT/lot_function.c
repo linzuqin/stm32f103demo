@@ -12,20 +12,12 @@ lot_err_t lot_create_root(lot_msg_t *msg)
 
     cJSON_AddStringToObject(msg->root, "version", "1.0"); // 添加版本信息
     cJSON_AddStringToObject(msg->root, "id", "1"); // 添加指令ID
-    cJSON *params_json = cJSON_CreateObject(); // 创建参数对象
-    if (params_json == NULL) 
-    {
-        //LOG_E("Failed to create JSON params object");
-        cJSON_Delete(msg->root); // 删除已创建的根对象
-        return LOT_MALLOC_FAIL; // 创建参数对象失败
-    }
-    cJSON_AddItemToObject(msg->root, "params", params_json); // 将参数对象添加到根对象中
     return LOT_ADD_SUCCESS; // 返回创建的JSON根对象
 }
 
-lot_err_t lot_Add_String(lot_msg_t *msg, const char* key, const char* value)
+lot_err_t lot_Add_String(cJSON *root, const char* key, const char* value)
 {
-    if (msg == NULL) 
+    if (root == NULL) 
     {
         //LOG_E("Message object is NULL");
         return LOT_PARAM_ERR; // 参数错误
@@ -43,13 +35,6 @@ lot_err_t lot_Add_String(lot_msg_t *msg, const char* key, const char* value)
         return LOT_PARAM_ERR; // 参数错误
     }
 
-    cJSON* params = cJSON_GetObjectItem(msg->root, "params");
-    if (params == NULL) 
-    {
-        //LOG_E("Params object not found in JSON root");
-        return LOT_NOT_FOUND; // 未找到参数对象
-    }
-
     cJSON* item_js = cJSON_CreateObject();
     if (item_js == NULL) 
     {
@@ -58,20 +43,20 @@ lot_err_t lot_Add_String(lot_msg_t *msg, const char* key, const char* value)
     }
 
     cJSON_AddStringToObject(item_js, "value", value); // 添加键值对到新对象
-    if (msg->root == NULL) 
+    if (root == NULL) 
     {
         //LOG_E("Message root is NULL");
         return LOT_PARAM_ERR; // 参数错误
     }
 
-    cJSON_AddItemToObject(params, key, item_js); // 将新对象添加到params对象中
+    cJSON_AddItemToObject(root, key, item_js); // 将新对象添加到params对象中
     //LOG_I("Added number to JSON: key=%s, value=%f", key, value);
     return LOT_ADD_SUCCESS; // 添加成功
 }
 
-lot_err_t lot_Add_Number(lot_msg_t *msg, const char* key, double value)
+lot_err_t lot_Add_Number(cJSON *root, const char* key, double value)
 {
-    if (msg == NULL) 
+    if (root == NULL) 
     {
         //LOG_E("Message object is NULL");
         return LOT_PARAM_ERR;
@@ -83,13 +68,6 @@ lot_err_t lot_Add_Number(lot_msg_t *msg, const char* key, double value)
         return LOT_PARAM_ERR;
     }
 
-    cJSON* params = cJSON_GetObjectItem(msg->root, "params");
-    if (params == NULL) 
-    {
-        //LOG_E("Params object not found in JSON root");
-        return LOT_NOT_FOUND;
-    }
-
     cJSON* item_js = cJSON_CreateObject();
     if (item_js == NULL) 
     {
@@ -99,22 +77,16 @@ lot_err_t lot_Add_Number(lot_msg_t *msg, const char* key, double value)
 
     cJSON_AddNumberToObject(item_js, "value", value);
 
-    cJSON_AddItemToObject(params, key, item_js);
+    cJSON_AddItemToObject(root, key, item_js);
 
     return LOT_ADD_SUCCESS;
 }
 
-lot_err_t lot_Add_Bool(lot_msg_t *msg, const char* key, _Bool value)
+lot_err_t lot_Add_Bool(cJSON *root, const char* key, _Bool value)
 {
-    if (msg->root == NULL || key == NULL) {
+    if (root == NULL || key == NULL) {
         //LOG_E("Invalid parameters for adding boolean to JSON");
         return LOT_PARAM_ERR; // 参数错误
-    }
-
-    cJSON* params = cJSON_GetObjectItem(msg->root, "params");
-    if (params == NULL) {
-        //LOG_E("Params object not found in JSON root");
-        return LOT_NOT_FOUND; // 未找到参数对象
     }
 
     cJSON* item_js = cJSON_CreateObject();
@@ -125,7 +97,38 @@ lot_err_t lot_Add_Bool(lot_msg_t *msg, const char* key, _Bool value)
 
     cJSON_AddBoolToObject(item_js, "value", value); // 添加键值对到新对象
 
-    cJSON_AddItemToObject(params, key, item_js); // 将新对象添加到params对象中
+    cJSON_AddItemToObject(root, key, item_js); // 将新对象添加到params对象中
+    //LOG_I("Added boolean to JSON: key=%s, value=%d", key, value);
+    return LOT_ADD_SUCCESS; // 添加成功
+}
+
+/*添加数组到cjson节点中，目前只支持数组类型*/
+lot_err_t lot_Add_Array(cJSON *root, const char* key, uint8_t *arr_buf , size_t arr_szie)
+{
+    if (root == NULL || key == NULL) {
+        //LOG_E("Invalid parameters for adding boolean to JSON");
+        return LOT_PARAM_ERR; // 参数错误
+    }
+
+    cJSON* item_js = cJSON_CreateObject();
+    if (item_js == NULL) {
+        //LOG_E("Failed to create JSON object for key: %s", key);
+        return LOT_MALLOC_FAIL; // 内存分配失败
+    }
+
+    cJSON *array_value = cJSON_CreateArray();
+    if(array_value == NULL)
+    {
+        return LOT_MALLOC_FAIL; // 内存分配失败
+    }
+
+    for(size_t i = 0;i<arr_szie;i++)
+    {
+        cJSON_AddItemToArray(array_value, cJSON_CreateNumber(arr_buf[i]));
+    }
+    cJSON_AddItemToObject(item_js, "value", array_value); // 添加键值对到新对象
+
+    cJSON_AddItemToObject(root, key, item_js); // 将新对象添加到params对象中
     //LOG_I("Added boolean to JSON: key=%s, value=%d", key, value);
     return LOT_ADD_SUCCESS; // 添加成功
 }

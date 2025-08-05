@@ -1,6 +1,6 @@
 #include "uart.h"
 
-#define u1_ring_buf_size 64
+#define u1_ring_buf_size uart1_rx_size * 2
 uint8_t u1_ring_buf[u1_ring_buf_size];
 
 #define u2_ring_buf_size 512
@@ -261,7 +261,6 @@ uint16_t ringbuf_put(ring_buf_t* rb, const uint8_t* data, uint16_t len)
     return len;
 }
 
-
 uint16_t ringbuf_get(ring_buf_t* rb, uint8_t* dest, uint16_t len) 
 {
     // 计算已用空间
@@ -297,7 +296,6 @@ uint16_t ringbuf_get(ring_buf_t* rb, uint8_t* dest, uint16_t len)
     return len;
 }
 
-
 uint16_t ringbuf_find(ring_buf_t* rb, const char* target) 
 {
     uint16_t target_len = strlen(target);
@@ -316,86 +314,6 @@ uint16_t ringbuf_find(ring_buf_t* rb, const char* target)
         if(match) return i; // 返回找到的位置（相对于tail）
     }
     return 0xFFFF; // 未找到
-}
-
-/**
-  * @brief  检查DMA发送是否完成
-  * @param  uart_device: 串口设备结构体指针
-  * @retval 发送状态：1-完成，0-未完成
-  */
-uint8_t UART_DMA_TransmitComplete(uart_device_t *uart_device)
-{
-    if(uart_device == NULL) return 1;
-    
-    switch((uint32_t)uart_device->port) {
-        case (uint32_t)USART1:
-            return (DMA_GetCurrDataCounter(DMA1_Channel4) == 0);
-        case (uint32_t)USART2:
-            return (DMA_GetCurrDataCounter(DMA1_Channel7) == 0);
-        case (uint32_t)USART3:
-            return (DMA_GetCurrDataCounter(DMA1_Channel2) == 0);
-        default:
-            return 1;
-    }
-}
-
-int8_t UART_DMA_Transmit(uart_device_t *uart_device, uint8_t *pData, uint16_t Size)
-{
-    /*--------------------- 参数检查 ---------------------*/
-    if(uart_device == NULL || pData == NULL || Size == 0) {
-        return -1;
-    }
-
-    /*---------------- 获取DMA通道状态 -----------------*/
-    DMA_Channel_TypeDef* dma_ch = NULL;
-    uint32_t dma_tc_flag = 0;
-    
-    switch((uint32_t)uart_device->port) {
-        case (uint32_t)USART1:
-            dma_ch = DMA1_Channel4;
-            dma_tc_flag = DMA1_FLAG_TC4;
-            break;
-        case (uint32_t)USART2:
-            dma_ch = DMA1_Channel7;
-            dma_tc_flag = DMA1_FLAG_TC7;
-            break;
-        case (uint32_t)USART3:
-            dma_ch = DMA1_Channel2;
-            dma_tc_flag = DMA1_FLAG_TC2;
-            break;
-        default:
-            return -1;
-    }
-
-    /* 等待上次传输完成并清除标志 */
-    if(DMA_GetFlagStatus(dma_tc_flag) == RESET) {
-        uint32_t timeout = 100000; // 适当超时值
-        while(DMA_GetFlagStatus(dma_tc_flag) == RESET) {
-            if(--timeout == 0) return -2; // 超时返回
-        }
-    }
-    DMA_ClearFlag(dma_tc_flag);
-
-    /*---------------- 数据长度检查 -----------------*/
-    if(Size > uart_device->tx_max_size) {
-        return -3;
-    }
-
-    /*---------------- 数据拷贝到缓冲区 -----------------*/
-    memcpy(uart_device->tx_buffer, pData, Size);
-
-    /*---------------- 配置并启动DMA传输 -----------------*/
-    DMA_Cmd(dma_ch, DISABLE); // 先禁用DMA
-    
-    dma_ch->CNDTR = Size;     // 设置传输数据量
-    dma_ch->CMAR = (uint32_t)uart_device->tx_buffer; // 更新内存地址
-    
-    DMA_Cmd(dma_ch, ENABLE);  // 重新使能DMA
-
-    /* 使能串口的DMA发送请求 */
-    USART_DMACmd(uart_device->port, USART_DMAReq_Tx, ENABLE);
-
-    return 0;
 }
 
 void uartbuf_clear(uart_device_t *uart_device)
@@ -441,8 +359,6 @@ void USART_IRQHandler(uart_device_t *uart_device, uint8_t id) {
         USART_ITConfig(uart_device->port, USART_IT_IDLE, ENABLE);  // 重新使能 IDLE 中断
     }
 }
-
-
 
 void USART1_IRQHandler(void) {
   USART_IRQHandler(&uart_devices[0], 1);

@@ -16,7 +16,7 @@ AT_Device_t AT_Device = {
     .URC_TABLE = NULL,
     .msg_buf = at_msg_buf,
     .init_step = 0,
-    .rx_flag = &(AT_DEFAULT_UART_DEVICE.rx_flag),
+    .rx_flag = &(uart_devices[AT_UART_DEVICE].rx_flag),
     .status = AT_HW_INIT,
     .mqtt_params = 
     {
@@ -34,43 +34,49 @@ AT_Device_t AT_Device = {
 };
 
 /***** 以下为测试时定义的变量 *****/
-//uint8_t j_1_value = 0;
-//char j_2_value[LOT_STRING_SIZE];
-//uint8_t j_3_value[LOT_ARRAY_SIZE];
+uint8_t j_1_value = 1;
+char j_2_value[LOT_STRING_SIZE] = "hello world";
+uint8_t j_3_value[] = {2,0,0,2,0,4,1,8};
 
-//uint8_t object_j_1_value = 0;
-//char object_j_2_value[LOT_STRING_SIZE];
-//uint8_t object_j_3_value[LOT_ARRAY_SIZE];
+uint8_t object_j_1_value = 0;
+char object_j_2_value[LOT_STRING_SIZE] = "hello world";
+uint8_t object_j_3_value[LOT_ARRAY_SIZE] = {2,0,0,2,0,4,1,8};
 
 property_msg_t lot_msg_son[5] = {
-//    [0] = {.key = "j_1", .type = bool_type, .value.property_value = &object_j_1_value},
-//    [1] = {.key = "j_2", .type = string_type, .value.property_value = object_j_2_value},
+    [0] = {.key = "j_1", .type = bool_type, .value.property_value = &object_j_1_value},
+    [1] = {.key = "j_2", .type = string_type, .value.property_value = object_j_2_value},
 //    [2] = {.key = "j_3", .type = array_type, .value.property_value = object_j_3_value},
 };
 
 property_msg_t lot_msg[LOT_MSG_SIZE] =
 {
-//    [0] = {
-//        .key = "j_1",
-//        .type = bool_type,
-//        .value.property_value = &j_1_value,
-//    },
-//    [1] = {
-//        .key = "j_2",
-//        .type = string_type,
-//        .value.property_value = j_2_value,
-//    },
-//    [2] = {
-//        .key = "j_3",
-//        .type = array_type,
-//        .value.property_value = j_3_value,
-//    },
-//    [3] = {
-//        .key = "object",
-//        .type = object_type,
-//        .value.child = (struct property_msg_t *)lot_msg_son,
-//        .child_num = 3,
-//    }
+    [0] = {
+        .key = "j_1",
+        .type = bool_type,
+        .value.property_value = &j_1_value,
+				.authority = READ_WRITE,
+
+    },
+    [1] = {
+        .key = "j_2",
+        .type = string_type,
+        .value.property_value = j_2_value,
+				.authority = READ_WRITE,
+
+    },
+    [2] = {
+        .key = "j_3",
+        .type = array_type,
+        .value.property_value = j_3_value,
+        .authority = READ_WRITE,
+        .child_num = sizeof(j_3_value) / sizeof(j_3_value[0]),
+    },
+    [3] = {
+        .key = "object",
+        .type = object_type,
+        .value.child = (struct property_msg_t *)lot_msg_son,
+        .child_num = 2,
+    }
 };
 /********************/
 
@@ -180,8 +186,12 @@ uint8_t lot_msg_parase(cJSON *root, property_msg_t *msg, uint16_t size)
     }
 
     uint16_t i = 0;
-    for (i = 0; i < size && msg[i].key != NULL; i++)
+    for (i = 0; i < size; i++)               //需要保证标识符合法 且权限正确
     {
+        if(msg[i].key == NULL || msg[i].authority == ONLY_READ)
+        {
+            continue;
+        }
         cJSON *value_js = cJSON_GetObjectItem(root, msg[i].key);
         if (value_js != NULL)
         {
@@ -360,7 +370,7 @@ static void at_device_register(AT_Device_t *at_device, AT_CMD_t *cmd_table, AT_U
     if (!at_device)
         return;
 
-    at_device->uart_port = &AT_DEFAULT_UART_DEVICE;
+    at_device->uart_port = &uart_devices[AT_UART_DEVICE];
     at_device->CMD_TABLE = cmd_table ? cmd_table : AT_Cmd_table;
     at_device->URC_TABLE = urc_table ? urc_table : AT_URC_table;
     at_device->init_step = 0;
@@ -371,24 +381,24 @@ void user_cmd_register(AT_Device_t *at_device)
 
     OneNET_Authorization("2018-10-31", at_device->mqtt_params.Product_ID, 1956499200, at_device->mqtt_params.SECRET_KEY, at_device->mqtt_params.Device_Name, at_device->mqtt_params.Token, sizeof(at_device->mqtt_params.Token), 1);
 
-    AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
+    AT_Cmd_Register(at_device, "OK", 3000, NULL, -1,
                     "AT+CWJAP=\"%s\",\"%s\"\r\n", at_device->wifi_params.WiFi_SSID, at_device->wifi_params.WiFi_Password);
 
-    AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
+    AT_Cmd_Register(at_device, "OK", 3000, NULL, -1,
                     "AT+CIPSNTPCFG=1,8,\"ntp1.aliyun.com\"\r\n");
 
-    AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
+    AT_Cmd_Register(at_device, "OK", 3000, NULL, -1,
                     "AT+MQTTUSERCFG=0,1,\"%s\",\"%s\",\"%s\",0,0,\"\"\r\n",
                     at_device->mqtt_params.Device_Name, at_device->mqtt_params.Product_ID, at_device->mqtt_params.Token);
 
-    AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
+    AT_Cmd_Register(at_device, "OK", 3000, NULL, -1,
                     "AT+MQTTCONNCFG=0,10,0,\"\",\"\",0,0\r\n");
 
     //    AT_Cmd_Register(at_device, "OK", 100, NULL, -1,
     //                    "AT+MQTTCLIENTID=0,\"%s\"\r\n",
     //                    clientId);
 
-    AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
+    AT_Cmd_Register(at_device, "OK", 5000, NULL, -1,
                     "AT+MQTTCONN=0,\"%s\",%d,1\r\n", IP_ADDRESS, PORT_NUMBER);
 
     AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
@@ -555,18 +565,142 @@ void AT_IDLE_CallBack(void *device)
     at_device->status = AT_IDLE;
 }
 
+void Object_Add(cJSON *root , char *property_name , property_msg_t *property_msg, uint16_t size)
+{
+    cJSON *object_js = cJSON_CreateObject();
+    if (object_js == NULL)
+    {
+        // Handle error
+        return;
+    }
+    for(uint16_t i = 0;i < size; i++)
+    {
+        if(property_msg[i].key == NULL || property_msg[i].authority == ONLY_WRITE)
+        {
+            continue;
+        }
+        switch(property_msg[i].type)
+        {
+            case object_type:
+            {
+                cJSON *object_child_js = cJSON_CreateObject();
+                if (object_child_js == NULL)
+                {
+                    // Handle error
+                    return;
+                }
+                Object_Add(object_child_js ,property_msg[i].key , (property_msg_t *)property_msg[i].value.child, property_msg[i].child_num);
+                break;
+            }
+            case bool_type:
+            {
+                cJSON_AddBoolToObject(object_js, property_msg[i].key, (_Bool)(*(property_msg[i].value.property_value)));
+                break;
+            }
+
+            case enum_type:
+            case int_type:
+            case float_type:
+            {
+                cJSON_AddNumberToObject(object_js, property_msg[i].key, *(property_msg[i].value.property_value));
+                break;
+            }
+
+            case string_type:
+            {
+                cJSON_AddStringToObject(object_js, property_msg[i].key, (const char *)(property_msg[i].value.property_value));
+                break;
+            }
+
+            case array_type:
+            {
+                cJSON *array_js = cJSON_CreateArray();
+                if(array_js == NULL)
+                {
+                    return; // 内存分配失败
+                }
+                for(size_t j = 0; j < property_msg[i].child_num; j++)
+                {
+                    cJSON_AddItemToArray(array_js, cJSON_CreateNumber(property_msg[i].value.property_value[j]));
+                }
+                cJSON_AddItemToObject(object_js, property_msg[i].key, array_js);
+                break;
+            }
+        }
+    }
+    cJSON* value_js = cJSON_CreateObject();
+    cJSON_AddItemToObject(value_js , "value" , object_js);
+    cJSON_AddItemToObject(root, property_name, value_js);
+}
+
 void AT_UPDATA_CallBack(void *device)
 {
     AT_Device_t *at_device = device;
 
     // Update task logic can be implemented here
-//        lot_msg_t msg;
-//        lot_create_root(&msg);
-//        lot_Add_Number(&msg, "test_time", Unix_Time);
-//        lot_generate_str(&msg);
-//        mqtt_pub(at_device, POST_TOPIC, msg.str, msg.len);
-//        lot_clean(&msg);
+    lot_msg_t msg;
+    lot_create_root(&msg);
+    cJSON *params_js = cJSON_CreateObject();
+    if (params_js == NULL)
+    {
+        return;
+    }
 
+    for(uint16_t i = 0; i < LOT_MSG_SIZE ; i++ )
+    {
+        if(lot_msg[i].key == NULL || lot_msg[i].authority == ONLY_WRITE)
+        {
+            continue;
+        }
+        switch(lot_msg[i].type)
+        {
+            case object_type:
+            {
+//                cJSON *object_js = cJSON_CreateObject();
+//                if (object_js == NULL)
+//                {
+//                    // Handle error
+//                    return;
+//                }
+                Object_Add(params_js , lot_msg[i].key , (property_msg_t *)lot_msg[i].value.child , lot_msg[i].child_num);
+                break;
+            }
+
+            case enum_type:
+            case int_type:
+            case float_type:
+            {
+                lot_Add_Number(params_js, lot_msg[i].key, *(lot_msg[i].value.property_value));
+                break;
+            }
+            
+            case bool_type:
+            {
+                lot_Add_Bool(params_js, lot_msg[i].key, (_Bool)(*(lot_msg[i].value.property_value)));
+                break;
+            }
+
+            case string_type:
+            {
+                lot_Add_String(params_js, lot_msg[i].key, (const char *)(lot_msg[i].value.property_value));
+                break;
+            }
+
+            case array_type:
+            {
+                lot_Add_Array(params_js, lot_msg[i].key, (lot_msg[i].value.property_value), lot_msg[i].child_num);
+                break;
+            }
+        }
+    }
+		cJSON_AddItemToObject(msg.root ,"params" , params_js );
+		lot_err_t result = lot_generate_str(&msg);
+    if(result == LOT_ADD_SUCCESS)
+    {
+        mqtt_pub(at_device, POST_TOPIC, msg.str, msg.len);
+//			LOG_I("%s" , msg.str);
+    }
+    lot_clean(&msg);
     at_device->status = AT_IDLE;
 }
 
@@ -579,7 +713,7 @@ void AT_GET_NTP_CallBack(void *device)
 
 void AT_poll(AT_Device_t *at_device) 
 {
-    if (!at_device) return;
+    if (!at_device || AT_Device_ENABLE != 1) return;
     
     AT_STATUS_TYPE_t index_status = at_device->status;
 

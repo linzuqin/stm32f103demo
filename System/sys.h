@@ -24,6 +24,8 @@
 #include "lot_function.h"
 #include "W25Q64.h"
 #include "MyIIC.h"
+#include "GPIO.h" 
+#include "config.h"
 
 #include "string.h"
 #include "stdio.h"
@@ -35,33 +37,7 @@
 #include <stdarg.h>
 #include "time.h"
 
-/*project version*/
-#define Version											"1.4.3"
 
-/*modbus master*/
-#define MODBUS_MASTER_ENABLE        0
-#if MODBUS_MASTER_ENABLE
-#define MB_M_DEVICE				            uart3_device  //serial port
-#endif
-
-#define MODBUS_MASTER_SENSOR_ENABLE        0
-#if MODBUS_MASTER_SENSOR_ENABLE
-#define MODBUS_MASTER_SENSOR_DEVICE        uart3_device
-#endif
-
-#define MODBUS_SLAVE_ENABLE        1
-#if MODBUS_SLAVE_ENABLE
-#define MB_S_DEVICE_1							uart_devices[1]
-#define MODBUS_SLAVE_ADDR						1  //device addr
-#define MODBUS_SLAVE_BOUND					115200 //baudrate
-#endif
-
-#define USE_PID										 0
-
-
-/*是否使用片外flash*/
-#define OFF_CHIP						1
-#define OFF_CHIP_SPI				SPI1
 typedef struct 
 {
     /* data */

@@ -33,4 +33,4 @@
   D:\KEIL\PACK\MDK-Packs\cJSON\1.0.0\cJSON.h Component\AT\lot_function.h \
   Component\AT\base64.h Component\AT\hmac_sha1.h Component\AT\onenet.h \
   Hardware\MPU6050.h Hardware\MPU6050_Reg.h Hardware\W25Q64.h \
-  Hardware\MyIIC.h
+  Hardware\MyIIC.h System\config.h

@@ -6,18 +6,18 @@
 [Found keyword]: ----------Execution Region----------
 [name]:  ER_IROM1 
 [Exec base]: 0x8000000
-[Size]: 0xc620
+[Size]: 0x6e38
 [Max]: 0x10000
 [Found keyword]: ----------Execution Region----------
 [name]:  RW_IRAM1 
 [Exec base]: 0x20000000
-[Size]: 0x4a80
+[Size]: 0x37f0
 [Max]: 0x5000
 [parse_keil_map over printf bar]: 
   RW_IRAM1 :0x20000000
-   20.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö__|   93.13 % (   18.63 KB /    20.00 KB) [1408 B]
+   20.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö_______|   69.92 % (   13.98 KB /    20.00 KB) [6160 B]
   ER_IROM1 :0x8000000
-   64.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö_____|   77.39 % (   49.53 KB /    64.00 KB) [14816 B]
+   64.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö____________|   43.05 % (   27.55 KB /    64.00 KB) [37320 B]
 [export csv]: ./ac6demo_sort_by_flash.csv
 [export csv]: ./ac6demo_sort_by_ram.csv
 [export xlsx]: ac6demo_analysis.xlsx

@@ -36,7 +36,7 @@ BOOL
 xMBPortSerialInit(uint32_t bound)//适配串口初始化
 {
 	#if MODBUS_SLAVE_ENABLE
-		My_UART_Init(&MB_S_DEVICE_1);
+		My_UART_Init(&uart_devices[MB_S_DEVICE_1]);
 	#endif
 	return TRUE;
 }

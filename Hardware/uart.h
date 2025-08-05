@@ -9,7 +9,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-#define uart1_rx_size    64 + 3 // Size of the UART receive buffer
+#define uart1_rx_size    256 + 3 // Size of the UART receive buffer
 #define uart2_rx_size    256 + 3 // Size of the UART receive buffer
 #define uart3_rx_size    64 + 3 // Size of the UART receive buffer
 #define uart4_rx_size    64 + 3 // Size of the UART receive buffer

@@ -4,6 +4,9 @@ MY_GPIO_t my_io[IO_NUM];
 
 void MyGPIO_Init(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIOMode_TypeDef mode)
 {
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+    GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
+
     // 启用GPIO时钟
     if (GPIOx == GPIOA)
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
@@ -36,6 +39,11 @@ void my_io_init(void)
     for(i = 0; i < IO_NUM;i++)
     {
         MyGPIO_Init(my_io[i].Port , my_io[i].Pin , my_io[i].mode);
+        if( (my_io[i].mode & 0x10) == 1)               //输出模式
+        {
+            GPIO_WriteBit(my_io[i].Port , my_io[i].Pin , !my_io[i].trigger_level);    //保证初始状态为未被触发
+        }
+
     }
 }
 
@@ -47,7 +55,14 @@ void IO_TASK(void *params)
         {
             if( (my_io[i].mode & 0x10) == 1)               //输出模式
             {
-                GPIO_WriteBit(my_io[i].Port , my_io[i].Pin , my_io[i].output);
+                if(my_io[i].output == 1)
+                {
+                    GPIO_WriteBit(my_io[i].Port , my_io[i].Pin , my_io[i].trigger_level);
+                }
+                else
+                {
+                    GPIO_WriteBit(my_io[i].Port , my_io[i].Pin , !my_io[i].trigger_level);
+                }
             }
             else
             {

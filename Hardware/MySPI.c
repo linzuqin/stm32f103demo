@@ -1,5 +1,19 @@
 #include "MySPI.h"
 
+spi_device_t spi_device[SPI_NUM] = 
+{
+	[0] = 
+	{
+		.spix = SPI1,
+		.cs_gpiox = SPI_CS_PORT,
+		.cs_gpio_pin = SPI_CS_PIN,
+	},
+	[1] = 
+	{
+		.spix = SPI2,
+	}
+};
+
 void MySPI_Init(SPI_TypeDef* SPIx)
 {
 	uint16_t mosi_pin = 0;

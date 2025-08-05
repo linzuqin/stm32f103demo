@@ -12,7 +12,9 @@ typedef struct
     GPIOMode_TypeDef mode;              //模式
     uint8_t output;                     //输出状态
     uint8_t input;                      //输入状态
+    BitAction trigger_level;                    //触发电平
 }MY_GPIO_t;
+extern MY_GPIO_t my_io[IO_NUM];
 
 void MyGPIO_Init(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIOMode_TypeDef mode);
 void io_task_init(void);

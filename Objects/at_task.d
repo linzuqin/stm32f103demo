@@ -28,4 +28,5 @@
   Component\modbus\modbus\include\mbconfig.h \
   Component\modbus\modbus\include\mbframe.h \
   Component\modbus\modbus\include\mbutils.h Hardware\MPU6050.h \
-  Hardware\MPU6050_Reg.h Hardware\W25Q64.h Hardware\MyIIC.h
+  Hardware\MPU6050_Reg.h Hardware\W25Q64.h Hardware\MyIIC.h \
+  System\config.h

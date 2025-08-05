@@ -112,7 +112,7 @@ static void retry_delay_100us(void) {
     while(delay--);
 }
 
-static spi_user_data spi1 = { .spix = OFF_CHIP_SPI, .cs_gpiox = SPI_CS_PORT, .cs_gpio_pin = SPI_CS_PIN };
+//static spi_user_data spi1 = { .spix = spi_device[OFF_CHIP_SPI].spi_port, .cs_gpiox = SPI_CS_PORT, .cs_gpio_pin = SPI_CS_PIN };
 sfud_err sfud_spi_port_init(sfud_flash *flash) {
     sfud_err result = SFUD_SUCCESS;
 
@@ -125,12 +125,12 @@ sfud_err sfud_spi_port_init(sfud_flash *flash) {
 //        /* SPI 外设初始化 */
 //        spi_configuration(&spi1);
 			
-				MySPI_Init(spi1.spix);
+				MySPI_Init(spi_device[OFF_CHIP_SPI].spix);
         /* 同步 Flash 移植所需的接口及数据 */
         flash->spi.wr = spi_write_read;
         flash->spi.lock = spi_lock;
         flash->spi.unlock = spi_unlock;
-        flash->spi.user_data = &spi1;
+        flash->spi.user_data = &spi_device[OFF_CHIP_SPI];
         /* about 100 microsecond delay */
         flash->retry.delay = retry_delay_100us;
         /* adout 60 seconds timeout */

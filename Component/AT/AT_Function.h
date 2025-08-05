@@ -22,7 +22,6 @@
 #define AT_RST_PORT     GPIOC
 #define AT_RST_PIN      GPIO_Pin_5
 
-#define AT_DEFAULT_UART_DEVICE  uart_devices[0]        //AT设备的串口
 
 #define AT_COMMAND_ARRAY_SIZE 16
 #define AT_MSG_SIZE 256                       //AT设备消息缓冲区大小
@@ -78,7 +77,7 @@ typedef struct
 
 typedef struct
 {
-    char *urc_msg;              // AT command string
+    const char *urc_msg;              // AT command string
     uint8_t (*callback)(void *device ,void *a);     // Expected response string
 } AT_URC_t;
 
@@ -95,8 +94,8 @@ typedef struct
 typedef struct
 {
   /* data */
-  char WiFi_SSID[32];                // WiFi SSID
-  char WiFi_Password[32];            // WiFi 密码
+  char WiFi_SSID[16];                // WiFi SSID
+  char WiFi_Password[16];            // WiFi 密码
 }wifi_params_t;
 
 // 定义 AT 设备结构体

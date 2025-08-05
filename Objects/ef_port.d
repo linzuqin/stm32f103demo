@@ -30,7 +30,7 @@
   D:\KEIL\PACK\MDK-Packs\cJSON\1.0.0\cJSON.h Component\AT\lot_function.h \
   Component\AT\base64.h Component\AT\hmac_sha1.h Component\AT\onenet.h \
   Hardware\MPU6050.h Hardware\MPU6050_Reg.h Hardware\W25Q64.h \
-  Hardware\MyIIC.h Component\easyflash\inc\ef_def.h \
+  Hardware\MyIIC.h System\config.h Component\easyflash\inc\ef_def.h \
   D:\KEIL\PACK\RealThread\RT-Thread\3.1.5\include\rthw.h \
   Component\sfud\inc\sfud.h Component\sfud\inc\sfud_def.h \
   Component\sfud\inc\sfud_cfg.h Component\sfud\inc\sfud_flash_def.h

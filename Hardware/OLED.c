@@ -8,21 +8,36 @@ uint8_t OLED_Index_DisplayBuf[8][128];
 
 void I2C_WriteByte(uint8_t addr,uint8_t data)
 {
-	while(I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY));
+	while(I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY))
+	{
+		rt_thread_mdelay(10);
+	};
 	
 	I2C_GenerateSTART(I2C1, ENABLE);
  
-	while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT));
- 
+	while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT))
+	{
+		rt_thread_mdelay(10);
+	};
+	
 	I2C_Send7bitAddress(I2C1, OLED_ADDRESS, I2C_Direction_Transmitter);
 	
-	while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+	while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+	{
+		rt_thread_mdelay(10);
+	};
  
 	I2C_SendData(I2C1, addr);
-	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+	{
+		rt_thread_mdelay(10);
+	};
  
 	I2C_SendData(I2C1, data);
-	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+	{
+		rt_thread_mdelay(10);
+	};
 	
 	I2C_GenerateSTOP(I2C1, ENABLE);
 }

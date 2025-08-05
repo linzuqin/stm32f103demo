@@ -9,7 +9,8 @@
     "stm32f10x.h": "c",
     "string.h": "c",
     "user_flash.h": "c",
-    "at_function.h": "c"
+    "at_function.h": "c",
+    "type_traits": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

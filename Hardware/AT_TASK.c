@@ -5,14 +5,14 @@ static struct rt_timer timer2;
 
 
 struct rt_thread at_thread;
-uint8_t at_thread_stack[4096];
+uint8_t at_thread_stack[3072];
 
 void AT_Thread_Entry(void *parameter)
 {
     while (1)
     {
       AT_poll(&AT_Device);
-      rt_thread_mdelay(1000);
+      rt_thread_mdelay(100);
     }
 }
 
@@ -57,7 +57,7 @@ void AT_Thread_Init(void)
 	rt_timer_init(&timer2, "timer2",  
 							timeout2, 
 							RT_NULL,
-							120 * 1000, 
+							10 * 1000, 
 							RT_TIMER_FLAG_PERIODIC);
 	rt_timer_start(&timer2);
 }

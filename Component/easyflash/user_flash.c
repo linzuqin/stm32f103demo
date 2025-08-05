@@ -42,7 +42,7 @@ struct rt_thread user_flash_pannel;
 
 struct rt_mailbox mb;
 /* 用于放邮件的内存池 */
-static char mb_pool[64];
+static char mb_pool[32];
 
 void user_flash_task(void *params)
 {

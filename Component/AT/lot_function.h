@@ -35,6 +35,7 @@ typedef struct {
     uint16_t len; // 字符串长度
 } lot_msg_t;
 
+/*属性类型*/
 typedef enum
 {
     object_type = 0,
@@ -43,7 +44,16 @@ typedef enum
     string_type,
     bool_type,
     array_type,
+    enum_type,
 }property_type_t;
+
+/*权限类型*/
+typedef enum
+{
+    ONLY_READ = 0, // 只读
+    ONLY_WRITE, // 只写
+    READ_WRITE, // 读写
+}property_authority_t;
 
 #define property_value_max_size 64
 
@@ -55,8 +65,9 @@ typedef struct
         uint8_t *property_value;      //属性值
 	    struct property_msg_t *child; // 前向声明处理嵌套
     } value;
-		uint16_t child_num;							//子项长度
+    uint16_t child_num;							//子项长度
     property_type_t type; //类型
+    property_authority_t authority; //权限
 }property_msg_t;
 
 /**
@@ -75,7 +86,7 @@ lot_err_t lot_create_root(lot_msg_t *msg);
  * @param value 参数的字符串值。
  * @return lot_err_t 返回LOT_ADD_SUCCESS表示添加成功，否则返回错误码。
  */
-lot_err_t lot_Add_String(lot_msg_t *msg, const char* key, const char* value);
+lot_err_t lot_Add_String(cJSON *root, const char* key, const char* value);
 
 /**
  * @brief 向params对象中添加一个数值类型的参数。
@@ -85,7 +96,7 @@ lot_err_t lot_Add_String(lot_msg_t *msg, const char* key, const char* value);
  * @param value 参数的数值。
  * @return lot_err_t 返回LOT_ADD_SUCCESS表示添加成功，否则返回错误码。
  */
-lot_err_t lot_Add_Number(lot_msg_t *msg, const char* key, double value);
+lot_err_t lot_Add_Number(cJSON *root, const char* key, double value);
 
 /**
  * @brief 向params对象中添加一个布尔类型的参数。
@@ -95,8 +106,9 @@ lot_err_t lot_Add_Number(lot_msg_t *msg, const char* key, double value);
  * @param value 参数的布尔值。
  * @return lot_err_t 返回LOT_ADD_SUCCESS表示添加成功，否则返回错误码。
  */
-lot_err_t lot_Add_Bool(lot_msg_t *msg, const char* key, _Bool value);
+lot_err_t lot_Add_Bool(cJSON *root, const char* key, _Bool value);
 
+lot_err_t lot_Add_Array(cJSON *root, const char* key, uint8_t *arr_buf , size_t arr_szie);
 /**
  * @brief 生成JSON字符串，并保存到msg->str中，同时设置字符串长度msg->len。
  * 
