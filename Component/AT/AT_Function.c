@@ -18,14 +18,6 @@ AT_Device_t AT_Device = {
     .init_step = 0,
     .rx_flag = &(uart_devices[AT_UART_DEVICE].rx_flag),
     .status = AT_HW_INIT,
-    .mqtt_params = 
-    {
-        .IP_Address = IP_ADDRESS,
-        .Port = PORT_NUMBER,
-        .Product_ID = PRODUCT_ID,
-        .Device_Name = DEVICE_NAME,
-        .SECRET_KEY = MY_SECRET_KEY,
-    },
     .wifi_params = 
     {
         .WiFi_SSID = DEFAULT_WIFI_SSID,
@@ -172,10 +164,14 @@ at_err_t mqtt_pub(AT_Device_t *at_device, const char *topic, const char *data, u
 
 uint8_t set_ack(AT_Device_t *at_device, char *id)
 {
+	#if MQTT_CLIENT_ENABLE
     char ack_buf[64];
     memset(ack_buf, 0, 64);
     sprintf(ack_buf, "{\"id\": \"%s\",\"code\": 200,\"msg\": \"success\"}", id);
     return mqtt_pub(at_device, SET_ACK_TOPIC, ack_buf, strlen(ack_buf));
+	#else
+		return 1;
+	#endif
 }
 
 uint8_t lot_msg_parase(cJSON *root, property_msg_t *msg, uint16_t size)
@@ -378,7 +374,15 @@ static void at_device_register(AT_Device_t *at_device, AT_CMD_t *cmd_table, AT_U
 
 void user_cmd_register(AT_Device_t *at_device)
 {
-
+	#if MQTT_CLIENT_ENABLE
+		at_device->mqtt_params.IP_Address = IP_ADDRESS;
+		at_device->mqtt_params.Port = PORT_NUMBER;
+		at_device->mqtt_params.Product_ID = PRODUCT_ID;
+		at_device->mqtt_params.Device_Name = DEVICE_NAME;
+		at_device->mqtt_params.SECRET_KEY = MY_SECRET_KEY;
+		at_device->mqtt_params.keepalive = MQTT_KEEP_ALIVE;
+	
+	
     OneNET_Authorization("2018-10-31", at_device->mqtt_params.Product_ID, 1956499200, at_device->mqtt_params.SECRET_KEY, at_device->mqtt_params.Device_Name, at_device->mqtt_params.Token, sizeof(at_device->mqtt_params.Token), 1);
 
     AT_Cmd_Register(at_device, "OK", 3000, NULL, -1,
@@ -392,7 +396,7 @@ void user_cmd_register(AT_Device_t *at_device)
                     at_device->mqtt_params.Device_Name, at_device->mqtt_params.Product_ID, at_device->mqtt_params.Token);
 
     AT_Cmd_Register(at_device, "OK", 3000, NULL, -1,
-                    "AT+MQTTCONNCFG=0,10,0,\"\",\"\",0,0\r\n");
+                    "AT+MQTTCONNCFG=0,%d,0,\"\",\"\",0,0\r\n",at_device->mqtt_params.keepalive);
 
     //    AT_Cmd_Register(at_device, "OK", 100, NULL, -1,
     //                    "AT+MQTTCLIENTID=0,\"%s\"\r\n",
@@ -403,6 +407,7 @@ void user_cmd_register(AT_Device_t *at_device)
 
     AT_Cmd_Register(at_device, "OK", 1000, NULL, -1,
                     "AT+MQTTSUB=0,\"%s\",1\r\n", SET_TOPIC_ALL);
+	#endif
 }
 
 uint8_t AT_Cmd_Register(AT_Device_t *at_device, const char *response,
@@ -635,7 +640,9 @@ void Object_Add(cJSON *root , char *property_name , property_msg_t *property_msg
 
 void AT_UPDATA_CallBack(void *device)
 {
+
     AT_Device_t *at_device = device;
+		#if MQTT_CLIENT_ENABLE
 
     // Update task logic can be implemented here
     lot_msg_t msg;
@@ -701,6 +708,7 @@ void AT_UPDATA_CallBack(void *device)
 //			LOG_I("%s" , msg.str);
     }
     lot_clean(&msg);
+		#endif
     at_device->status = AT_IDLE;
 }
 

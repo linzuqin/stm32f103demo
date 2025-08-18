@@ -31,15 +31,16 @@
 /*平台连接参数宏定义*/
 #define NTP_SERVER "time.windows.com"
 
-#define DEFAULT_WIFI_SSID 					"main" // 默认WiFi SSID
-#define DEFAULT_WIFI_PWD  					"12345678" // 默认WiFi密码
+#define DEFAULT_WIFI_SSID 					WIFI_SSID // 默认WiFi SSID
+#define DEFAULT_WIFI_PWD  					WIFI_PASSWORD // 默认WiFi密码
 
-#define IP_ADDRESS 									"mqtts.heclouds.com"
-#define PORT_NUMBER 								1883
-#define PRODUCT_ID 									"2Its5wq8a3"
-#define DEVICE_NAME 								"lot_device"
-#define MY_SECRET_KEY               "VDZEcm1HRFRaOG9mZ2NGeEtwenRkd25hQ0dIWTZDVGo="
-#define TOKEN    										"version=2018-10-31&res=products%2F2Its5wq8a3%2Fdevices%2Flot_device&et=1924876800&method=md5&sign=yEio49aeh%2BTf3XPlD8OyPQ%3D%3D"
+#if MQTT_CLIENT_ENABLE
+
+#define IP_ADDRESS 									MQTT_BROKER_ADDRESS
+#define PORT_NUMBER 								MQTT_BROKER_PORT
+#define PRODUCT_ID 									MQTT_USERNAME
+#define DEVICE_NAME 								MQTT_CLIENT_ID
+#define MY_SECRET_KEY               MQTT_PASSWORD
 
 #define POST_TOPIC		    					"$sys/"PRODUCT_ID"/"DEVICE_NAME"/thing/property/post"
 #define SET_TOPIC_ALL     					"$sys/"PRODUCT_ID"/"DEVICE_NAME"/thing/property/#"
@@ -50,6 +51,7 @@
 #define SET_TOPIC          				 	"$sys/"PRODUCT_ID"/"DEVICE_NAME"/thing/property/set"
 #define SET_ACK_TOPIC       				"$sys/"PRODUCT_ID"/"DEVICE_NAME"/thing/property/set_reply"
 
+#endif
 #define AT_STATUS_NUM 8
 typedef enum
 {
@@ -89,6 +91,7 @@ typedef struct
   char *Device_Name;              // 设备名称
   char *SECRET_KEY;              // 设备密钥
   char Token[256];                    // 令牌
+	uint16_t keepalive;
 }mqtt_connect_params_t;
 
 typedef struct
